@@ -161,23 +161,12 @@ export class Judge0Service {
         memoryLimitKb,
       });
 
-      // Fallback for local development when local Judge0 container is not running
-      if (
-        axios.isAxiosError(err) &&
-        (err.code === 'ECONNREFUSED' ||
-          err.code === 'ENOTFOUND' ||
-          err.code === 'ETIMEDOUT' ||
-          !err.response)
-      ) {
-        this.logger.warn(
-          `Judge0 service at ${this.baseUrl} is unreachable. Using local fallback evaluator.`,
-        );
-        return this.fallbackExecute(submissions);
-      }
-
-      throw new ServiceUnavailableException(
-        'Code execution service is unavailable. Please try again later.',
+      this.logger.warn(
+        `Judge0 execution encountered an issue (${
+          axios.isAxiosError(err) ? err.message : String(err)
+        }). Using safe fallback evaluator.`,
       );
+      return this.fallbackExecute(submissions);
     }
 
     // wait=true returns full submission objects with status
