@@ -24,6 +24,7 @@ export function useProctoring(
   const requireFullscreen = ref(options.requireFullscreen ?? true);
   const trackTabSwitches = ref(options.trackTabSwitches ?? true);
 
+  let isArmed = false;
   let lastViolationTime = 0;
 
   function checkFullscreenState() {
@@ -32,9 +33,11 @@ export function useProctoring(
       (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement ||
       (document as unknown as { mozFullScreenElement?: Element }).mozFullScreenElement;
 
-    isFullscreen.value = !!fsElement;
+    const currentlyFs = !!fsElement;
+    isFullscreen.value = currentlyFs;
 
-    if (!isFullscreen.value && requireFullscreen.value) {
+    // Only log exit violation if we were armed (already launched into exam workspace)
+    if (!currentlyFs && requireFullscreen.value && isArmed) {
       logViolation(ProctoringEventType.FULLSCREEN_EXIT, {
         reason: 'Student exited fullscreen mode',
       });
@@ -55,12 +58,15 @@ export function useProctoring(
         await elem.mozRequestFullScreen();
       }
       isFullscreen.value = true;
+      isArmed = true;
     } catch (e) {
       console.warn('[proctoring] Failed to enter fullscreen:', e);
     }
   }
 
   function logViolation(type: ProctoringEventType, metadata?: Record<string, unknown>) {
+    if (!isArmed) return;
+
     const now = Date.now();
     // Throttle duplicate events within 1.5s
     if (now - lastViolationTime < 1500) return;
@@ -94,7 +100,7 @@ export function useProctoring(
   }
 
   function handleVisibilityChange() {
-    if (!trackTabSwitches.value) return;
+    if (!trackTabSwitches.value || !isArmed) return;
 
     if (document.hidden) {
       isAway.value = true;
@@ -107,7 +113,7 @@ export function useProctoring(
   }
 
   function handleBlur() {
-    if (!trackTabSwitches.value) return;
+    if (!trackTabSwitches.value || !isArmed) return;
     logViolation(ProctoringEventType.WINDOW_BLUR, {
       reason: 'Browser window lost focus',
     });
@@ -120,8 +126,13 @@ export function useProctoring(
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
 
-    // Initial fullscreen state check
-    checkFullscreenState();
+    // Auto-launch fullscreen on workspace mount & arm proctoring after 500ms
+    void requestFullscreen().then(() => {
+      setTimeout(() => {
+        isArmed = true;
+        checkFullscreenState();
+      }, 500);
+    });
   });
 
   onUnmounted(() => {

@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { listSubmissions, deleteSubmission } from '../../services/adminApi';
 import type { AdminSubmission } from '../../types/admin';
 import ConfirmModal from '../../components/shared/ConfirmModal.vue';
+import ProctoringModal from '../../components/admin/ProctoringModal.vue';
 import TablePagination from '../../components/shared/TablePagination.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import RegalSelect from '../../components/admin/RegalSelect.vue';
@@ -20,6 +21,7 @@ interface ExamOption {
 const exams = ref<ExamOption[]>([]);
 const search = ref('');
 const examFilter = ref<number | ''>('');
+const showProctoringModal = ref(false);
 
 const confirmDelete = ref<AdminSubmission | null>(null);
 const deleting = ref(false);
@@ -143,6 +145,15 @@ function fullDate(iso: string) {
           class="w-full sm:w-44 px-3 py-1.5 border border-slate-200 dark:border-white/[0.08] rounded-lg bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-[13px] placeholder-slate-400 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none"
           placeholder="Search…"
         />
+        <RegalButton
+          variant="secondary"
+          size="sm"
+          class="!flex items-center gap-1.5"
+          @click="showProctoringModal = true"
+        >
+          <span class="material-symbols-outlined text-[16px] text-emerald-400">security</span>
+          Proctoring Logs
+        </RegalButton>
       </div>
     </div>
 
@@ -397,6 +408,13 @@ function fullDate(iso: string) {
       :danger="true"
       @confirm="onDelete"
       @cancel="confirmDelete = null"
+    />
+
+    <ProctoringModal
+      v-if="showProctoringModal"
+      :show="showProctoringModal"
+      :exam-id="Number(examFilter) || 1"
+      @close="showProctoringModal = false"
     />
   </div>
 </template>

@@ -473,3 +473,24 @@ export async function unassignProblemFromExam(
 ): Promise<void> {
   await api.delete(`/admin/problems/${problemId}/assign-exam/${examId}`);
 }
+
+// ─── Proctoring ───────────────────────────────────────────────────────────────
+
+export interface ProctoringLogEntry {
+  id: number;
+  userId: number;
+  examId: number;
+  eventType: 'FULLSCREEN_EXIT' | 'TAB_SWITCH' | 'WINDOW_BLUR';
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export async function getProctoringLogs(examId: number): Promise<ProctoringLogEntry[]> {
+  const { data } = await api.get<ProctoringLogEntry[]>(`/proctoring/exam/${examId}`);
+  return data;
+}
+
+export async function getProctoringSummary(examId: number): Promise<Record<number, number>> {
+  const { data } = await api.get<Record<number, number>>(`/proctoring/exam/${examId}/summary`);
+  return data;
+}
