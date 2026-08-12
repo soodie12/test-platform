@@ -10,6 +10,7 @@ const databaseConfig = (): TypeOrmModuleOptions => ({
   database: SECRETS.DB_NAME,
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+  migrationsRun: true,
   extra: {
     max: SECRETS.DB_POOL_SIZE,
   },
