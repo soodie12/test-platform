@@ -32,7 +32,7 @@ services:
       DB_PASSWORD:     ${DB_PASSWORD:?DB_PASSWORD is required}
       DB_NAME:         ${DB_NAME:-exam_platform}
       JWT_SECRET:      ${JWT_SECRET:?JWT_SECRET is required}
-      JWT_EXPIRES_IN:  ${JWT_EXPIRES_IN:-21600}
+      JWT_EXPIRES_IN:  ${JWT_EXPIRES_IN:-7d}
       JUDGE0_URL:      ${JUDGE0_URL:-http://judge0-server:2358}
       ADMIN_SETUP_KEY: ${ADMIN_SETUP_KEY:?ADMIN_SETUP_KEY is required}
       CORS_ORIGIN:     ${CORS_ORIGIN:-}

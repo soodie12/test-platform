@@ -104,7 +104,7 @@ APP_NAME=CodeVerdict
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 JWT_SECRET=your_generated_jwt_secret_here
-JWT_EXPIRES_IN=300000
+JWT_EXPIRES_IN=7d
 
 # ── Judge0 ────────────────────────────────────────────────────────────────────
 JUDGE0_URL=http://judge0-server:2358
@@ -207,7 +207,7 @@ Open your browser at `https://codeverdict.yourdomain.com` and register your admi
 Add a cron job (`crontab -e`):
 
 ```cron
-0 2 * * * docker compose -f /path/to/CodeVerdict/docker-compose.yml exec -T app-db pg_dump -U sanchit.sood gl_code_platform | gzip > /backups/codeverdict_$(date +\%F).sql.gz
+0 2 * * * docker compose -f ~/CodeVerdict/docker-compose.yml exec -T app-db pg_dump -U sanchit.sood gl_code_platform | gzip > /backups/codeverdict_$(date +\%F).sql.gz
 ```
 
 ### 2. View Logs
