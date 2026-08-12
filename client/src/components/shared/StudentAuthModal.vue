@@ -78,6 +78,20 @@ async function handleSubmit() {
       }
     }
 
+    // Directly request fullscreen on user click gesture
+    try {
+      const elem = document.documentElement as HTMLElement & {
+        webkitRequestFullscreen?: () => Promise<void>;
+      };
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      }
+    } catch {
+      /* ignore browser restrictions if any */
+    }
+
     emit('success');
   } catch (err: unknown) {
     const res = (err as { response?: { status?: number; data?: { message?: string } } })?.response;

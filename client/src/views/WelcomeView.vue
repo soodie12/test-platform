@@ -130,6 +130,20 @@ async function enterContest() {
     return;
   }
 
+  // Directly request fullscreen on user click gesture
+  try {
+    const elem = document.documentElement as HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void>;
+    };
+    if (elem.requestFullscreen) {
+      await elem.requestFullscreen();
+    } else if (elem.webkitRequestFullscreen) {
+      await elem.webkitRequestFullscreen();
+    }
+  } catch {
+    /* ignore browser restrictions if any */
+  }
+
   entering.value = true;
   try {
     await router.push({
