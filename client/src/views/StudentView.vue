@@ -16,6 +16,7 @@ import BottomPanel from '../components/layout/BottomPanel.vue';
 import WelcomeBanner from '../components/shared/WelcomeBanner.vue';
 import Toast from '../components/shared/Toast.vue';
 import SuccessModal from '../components/shared/SuccessModal.vue';
+import FullscreenOverlay from '../components/shared/FullscreenOverlay.vue';
 import ApiDocs from '../components/tabs/ApiDocs.vue';
 import ApiClient from '../components/tabs/ApiClient.vue';
 import CodeEditor from '../components/tabs/CodeEditor.vue';
@@ -28,6 +29,7 @@ import { useRunSubmitStore } from '../stores/runSubmit';
 import { useEditorStore } from '../stores/editor';
 import { useProblemsStore } from '../stores/problems';
 import { useResizable } from '../composables/useResizable';
+import { useProctoring } from '../composables/useProctoring';
 import { useAutosave } from '../composables/useAutosave';
 import { useTimer } from '../composables/useTimer';
 import { useCelebration } from '../composables/useCelebration';
@@ -107,6 +109,9 @@ const {
 provide('timerState', { remaining, isWarning, isCritical, isExpired });
 
 const celebration = useCelebration();
+
+const activeExamId = computed(() => examStore.activeExam?.id);
+const { isFullscreen, requestFullscreen } = useProctoring(activeExamId);
 
 const loading = ref(true);
 
@@ -428,6 +433,11 @@ const { onMouseDown: onBottomDrag } = useResizable('horizontal', (delta) => {
         successModal = null;
         runSubmit.submit();
       "
+    />
+
+    <FullscreenOverlay
+      :show="!isFullscreen"
+      @enter-fullscreen="requestFullscreen"
     />
 
     <Toast />

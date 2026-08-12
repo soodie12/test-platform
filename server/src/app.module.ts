@@ -10,6 +10,7 @@ import { ProblemsModule } from './problems/problems.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { AutosaveModule } from './autosave/autosave.module';
 import { AdminModule } from './admin/admin.module';
+import { ProctoringModule } from './proctoring/proctoring.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -23,6 +24,7 @@ import databaseConfig from './config/database.config';
     SubmissionsModule,
     AutosaveModule,
     AdminModule,
+    ProctoringModule,
   ],
   controllers: [AppController],
   providers: [AppService],
