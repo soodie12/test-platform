@@ -27,11 +27,11 @@ export const SECRETS = Object.freeze({
 
   // Auth
   JWT_SECRET: required('JWT_SECRET'),
-  JWT_EXPIRES_IN: optional('JWT_EXPIRES_IN', '1d'),
+  JWT_EXPIRES_IN: optional('JWT_EXPIRES_IN', '7d'),
 
   // Judge0
   JUDGE0_URL: optional('JUDGE0_URL', 'https://judge0-ce.p.rapidapi.com'),
-  RAPIDAPI_KEY: required('RAPIDAPI_KEY'),
+  RAPIDAPI_KEY: optional('RAPIDAPI_KEY', ''),
   RAPIDAPI_HOST: optional('RAPIDAPI_HOST', 'judge0-ce.p.rapidapi.com'),
 
   // Admin

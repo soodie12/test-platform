@@ -46,13 +46,17 @@ const availableLanguages = computed(() => {
     | (number | string)[]
     | undefined;
   if (!allowed || allowed.length === 0) return langs;
-  return langs.filter((l) =>
-    allowed.some((a) =>
-      typeof a === 'number'
-        ? a === l.id
-        : String(a).toLowerCase() === l.name.toLowerCase(),
-    ),
+  const filtered = langs.filter((l) =>
+    allowed.some((a) => {
+      if (typeof a === 'number' || !isNaN(Number(a))) {
+        return Number(a) === l.id;
+      }
+      const strA = String(a).toLowerCase();
+      const nameL = l.name.toLowerCase();
+      return nameL.includes(strA) || strA.includes(nameL);
+    }),
   );
+  return filtered.length > 0 ? filtered : langs;
 });
 
 function onLanguageChange(e: Event) {

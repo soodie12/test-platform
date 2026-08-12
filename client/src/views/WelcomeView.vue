@@ -3,16 +3,20 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import dayjs from 'dayjs';
 import AppHeader from '../components/layout/AppHeader.vue';
+import StudentAuthModal from '../components/shared/StudentAuthModal.vue';
 import { useExamStore } from '../stores/exam';
+import { useAuthStore } from '../stores/auth';
 import type { Exam } from '../types';
 import { brand } from '../config/brand';
 
 const router = useRouter();
 const examStore = useExamStore();
+const authStore = useAuthStore();
 const mobileMenuOpen = ref(false);
 const entering = ref(false);
 const loading = ref(true);
 const pickedExam = ref<Exam | null>(null);
+const showAuthModal = ref(false);
 
 // The exam being viewed on the countdown/enter screen
 const viewingExam = computed(() => pickedExam.value ?? examStore.activeExam);
@@ -119,6 +123,13 @@ async function enterContest() {
   const exam = viewingExam.value;
   if (!exam) return;
   examStore.selectExam(exam);
+
+  // If student is not logged in, prompt for identity details first
+  if (!authStore.isAuthenticated) {
+    showAuthModal.value = true;
+    return;
+  }
+
   entering.value = true;
   try {
     await router.push({
@@ -127,6 +138,17 @@ async function enterContest() {
     });
   } finally {
     entering.value = false;
+  }
+}
+
+function onAuthSuccess() {
+  showAuthModal.value = false;
+  const exam = viewingExam.value;
+  if (exam) {
+    void router.push({
+      name: 'workspace',
+      params: { id: exam.id },
+    });
   }
 }
 
@@ -916,6 +938,13 @@ const rules = [
         </span>
       </div>
     </footer>
+
+    <StudentAuthModal
+      :show="showAuthModal"
+      :exam-id="viewingExam?.id"
+      @close="showAuthModal = false"
+      @success="onAuthSuccess"
+    />
   </div>
 </template>
 

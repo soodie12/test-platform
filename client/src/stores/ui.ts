@@ -6,7 +6,7 @@ export type BottomTab = 'run-results' | 'custom-input' | 'test-results';
 
 export const useUiStore = defineStore('ui', () => {
   const activeTab = ref<ActiveTab>(
-    (localStorage.getItem('activeTab') as ActiveTab) || 'api-docs',
+    (localStorage.getItem('activeTab') as ActiveTab) || 'code-editor',
   );
   const bottomTab = ref<BottomTab>('run-results');
   const bannerDismissed = ref(

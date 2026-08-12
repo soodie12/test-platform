@@ -8,6 +8,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { StudentEntryDto } from './dto/student-entry.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
@@ -44,6 +45,16 @@ export class AuthController {
   })
   async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
     return this.authService.register(dto);
+  }
+
+  @Post('student-entry')
+  @Auth(AuthType.NONE)
+  @ApiOperation({
+    summary: 'Passwordless student entry by identity (roll number, first name, last name)',
+    description: 'Registers user if new, or logs them in directly if existing, returning a valid JWT access token.',
+  })
+  async studentEntry(@Body() dto: StudentEntryDto): Promise<AuthResponseDto> {
+    return this.authService.studentEntry(dto);
   }
 
   @Post('refresh')

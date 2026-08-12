@@ -20,10 +20,13 @@ import ApiDocs from '../components/tabs/ApiDocs.vue';
 import ApiClient from '../components/tabs/ApiClient.vue';
 import CodeEditor from '../components/tabs/CodeEditor.vue';
 import McqSection from '../components/student/McqSection.vue';
+import api from '../services/api';
+import type { Problem } from '../types';
 import { useUiStore } from '../stores/ui';
 import { useExamStore } from '../stores/exam';
 import { useRunSubmitStore } from '../stores/runSubmit';
 import { useEditorStore } from '../stores/editor';
+import { useProblemsStore } from '../stores/problems';
 import { useResizable } from '../composables/useResizable';
 import { useAutosave } from '../composables/useAutosave';
 import { useTimer } from '../composables/useTimer';
@@ -34,6 +37,7 @@ const uiStore = useUiStore();
 const examStore = useExamStore();
 const runSubmit = useRunSubmitStore();
 const editorStore = useEditorStore();
+const problemsStore = useProblemsStore();
 
 const successModal = ref<{
   mode: 'submit' | 'run';
@@ -107,6 +111,8 @@ const celebration = useCelebration();
 const loading = ref(true);
 
 onMounted(async () => {
+  uiStore.setActiveTab('code-editor');
+  void editorStore.fetchLanguages();
   await examStore.fetchActiveExam();
 
   // Ensure selectedExam matches the route param
@@ -116,13 +122,48 @@ onMounted(async () => {
     if (match) examStore.selectExam(match);
   }
 
+  const examId = examStore.activeExam?.id ?? routeExamId;
+  if (examId) {
+    try {
+      try {
+        await api.post(`/exams/${examId}/enroll`);
+      } catch {
+        /* already enrolled or error */
+      }
+      const { data: list } = await api.get<Problem[]>(
+        `/exams/${examId}/problems`,
+      );
+      if (Array.isArray(list) && list.length > 0) {
+        problemsStore.setProblems(list);
+        for (const p of list) {
+          try {
+            const { data: detail } = await api.get<Problem>(
+              `/exams/${examId}/problems/${p.id}`,
+            );
+            problemsStore.cacheProblemDetail(detail);
+          } catch {
+            /* ignore individual fetch error */
+          }
+        }
+        if (!editorStore.activeProblemId) {
+          const first = list[0];
+          editorStore.setActiveProblem(
+            first.id,
+            problemsStore.getProblemDetail(first.id) ?? first,
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('[workspace] Auto fetch problems failed', e);
+    }
+  }
+
   await examStore.fetchMyProgress();
   loading.value = false;
   void startAutosave();
   void startTimer();
 
-  // Auto-launch the guided tour once per exam
-  const examId = examStore.activeExam?.id;
+  // Auto-launch guided tour once per exam
   const tourKey = `tourShown:${examId}`;
   if (examId && !localStorage.getItem(tourKey)) {
     await nextTick();

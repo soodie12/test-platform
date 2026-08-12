@@ -63,6 +63,10 @@ export class UsersService {
     return this.userRepo.findOne({ where: { email } });
   }
 
+  async findByRollNumber(rollNumber: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { rollNumber } });
+  }
+
   async findByEmailWithPassword(email: string): Promise<User | null> {
     return this.userRepo
       .createQueryBuilder('user')

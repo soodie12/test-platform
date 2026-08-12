@@ -153,7 +153,7 @@ export async function startTour() {
     doneBtnText: 'Done ✓',
     overlayOpacity: 0.65,
     onDestroyed: () => {
-      uiStore.setActiveTab('api-docs');
+      uiStore.setActiveTab('code-editor');
     },
     steps: [
       {

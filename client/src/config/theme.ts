@@ -1,7 +1,7 @@
 import { brand } from './brand';
 
-const FALLBACK_PRIMARY = '#e42545';
-const FALLBACK_ACCENT = '#2eb392';
+const FALLBACK_PRIMARY = '#00D66C';
+const FALLBACK_ACCENT = '#10B981';
 
 /** Normalize hex input - accepts `FEBA17` or `#FEBA17` (# is a comment char in .env files). */
 function normalizeHex(raw: string): string {

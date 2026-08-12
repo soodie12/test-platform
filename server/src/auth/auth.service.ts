@@ -73,4 +73,41 @@ export class AuthService {
       },
     };
   }
+
+  async studentEntry(dto: {
+    rollNumber: string;
+    firstName: string;
+    lastName: string;
+  }): Promise<AuthResponseDto> {
+    const cleanRoll = dto.rollNumber.trim();
+    let user = await this.usersService.findByRollNumber(cleanRoll);
+
+    if (!user) {
+      const email = `${cleanRoll.toLowerCase()}@student.local`;
+      const randomPassword = `StudentPass_${cleanRoll}_${Date.now()}`;
+      const reg = await this.register({
+        rollNumber: cleanRoll,
+        firstName: dto.firstName.trim(),
+        lastName: dto.lastName.trim(),
+        email,
+        password: randomPassword,
+      });
+      user = await this.usersService.findByIdOrFail(reg.user.id);
+    }
+
+    const token = this.jwtService.sign({ sub: user.id });
+
+    return {
+      accessToken: token,
+      user: {
+        id: user.id,
+        email: user.email,
+        rollNumber: user.rollNumber,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        metadata: user.metadata,
+      },
+    };
+  }
 }

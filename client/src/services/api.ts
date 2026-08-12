@@ -16,14 +16,74 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function processQueue(err: unknown, token: string | null = null) {
+  failedQueue.forEach((prom) => {
+    if (err) {
+      prom.reject(err);
+    } else if (token) {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+}
+
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401 && useAuthStore().accessToken) {
-      useToastStore().add(
-        'error',
-        'Session expired. Refresh your token to continue.',
-      );
+  async (error: AxiosError) => {
+    const originalRequest = error.config as typeof error.config & {
+      _retry?: boolean;
+    };
+    const authStore = useAuthStore();
+
+    if (
+      error.response?.status === 401 &&
+      authStore.accessToken &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/auth/refresh') &&
+      !originalRequest.url?.includes('/auth/login')
+    ) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const { data } = await axios.post<{ accessToken: string }>(
+          '/api/auth/refresh',
+          { token: authStore.accessToken },
+        );
+        authStore.setToken(data.accessToken);
+        processQueue(null, data.accessToken);
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        }
+        return api(originalRequest);
+      } catch (refreshErr) {
+        processQueue(refreshErr, null);
+        authStore.logout();
+        useToastStore().add('error', 'Session expired. Please log in again.');
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
     }
     return Promise.reject(error as Error);
   },
