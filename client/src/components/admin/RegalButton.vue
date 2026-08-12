@@ -8,6 +8,7 @@ defineProps<{
 
 <template>
   <button
+    v-bind="$attrs"
     :class="[
       'regal-btn',
       `regal-${variant ?? 'secondary'}`,

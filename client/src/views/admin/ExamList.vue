@@ -10,6 +10,7 @@ import {
 import { getExamStatus } from '../../types/admin';
 import type { ExamWithProblems } from '../../types/admin';
 import ConfirmModal from '../../components/shared/ConfirmModal.vue';
+import ProctoringModal from '../../components/admin/ProctoringModal.vue';
 import TablePagination from '../../components/shared/TablePagination.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import { usePagination } from '../../composables/usePagination';
@@ -30,6 +31,7 @@ const {
 
 const confirmDelete = ref<ExamWithProblems | null>(null);
 const deleting = ref(false);
+const proctoringExam = ref<ExamWithProblems | null>(null);
 
 const duplicateTarget = ref<ExamWithProblems | null>(null);
 const duplicateTitle = ref('');
@@ -247,6 +249,13 @@ function statusLabel(exam: ExamWithProblems) {
                     >
                       Leaderboard
                     </RegalButton>
+                    <RegalButton
+                      variant="secondary"
+                      @click="proctoringExam = exam"
+                    >
+                      <span class="material-symbols-outlined text-[14px] text-emerald-400">security</span>
+                      Proctoring
+                    </RegalButton>
                     <RegalButton variant="accent" @click="openDuplicate(exam)">
                       Duplicate
                     </RegalButton>
@@ -421,5 +430,13 @@ function statusLabel(exam: ExamWithProblems) {
         </div>
       </div>
     </Teleport>
+
+    <ProctoringModal
+      v-if="proctoringExam"
+      :show="!!proctoringExam"
+      :exam-id="proctoringExam.id"
+      :exam-title="proctoringExam.title"
+      @close="proctoringExam = null"
+    />
   </div>
 </template>
