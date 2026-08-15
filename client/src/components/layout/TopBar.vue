@@ -38,8 +38,6 @@ const { theme, toggleTheme } = useTheme();
     <nav class="flex-1 flex items-center justify-center gap-1">
       <button
         v-for="tab in [
-          { id: 'api-docs', label: 'API Docs', icon: 'menu_book' },
-          { id: 'api-client', label: 'API Client', icon: 'send' },
           { id: 'code-editor', label: 'Code Editor', icon: 'code' },
         ] as const"
         :key="tab.id"

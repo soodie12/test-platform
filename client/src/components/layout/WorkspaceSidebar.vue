@@ -11,20 +11,6 @@ const tabs: {
   coachmark: string;
 }[] = [
   {
-    id: 'api-docs',
-    icon: 'menu_book',
-    label: 'API Docs',
-    coachmark:
-      'Browse the exam API reference - endpoints, parameters, and response shapes.',
-  },
-  {
-    id: 'api-client',
-    icon: 'send',
-    label: 'API Client',
-    coachmark:
-      'Make live API requests directly from the browser. Test your integration here.',
-  },
-  {
     id: 'code-editor',
     icon: 'code',
     label: 'Code Editor',

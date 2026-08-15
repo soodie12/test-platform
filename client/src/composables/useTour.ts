@@ -157,26 +157,6 @@ export async function startTour() {
     },
     steps: [
       {
-        element: '[data-tour="sidebar-api-docs"]',
-        popover: {
-          title: 'API Docs',
-          description:
-            'Browse the full exam API reference - endpoints, request/response formats, authentication headers, and example payloads. Start here to understand what the exam API can do.',
-          side: 'right',
-          align: 'start',
-        },
-      },
-      {
-        element: '[data-tour="sidebar-api-client"]',
-        popover: {
-          title: 'API Client',
-          description:
-            'Make live API calls directly from the browser - no Postman needed. Fill in parameters, hit Send, and inspect the response. Perfect for exploring the API before writing code.',
-          side: 'right',
-          align: 'start',
-        },
-      },
-      {
         element: '[data-tour="sidebar-code-editor"]',
         popover: {
           title: 'Code Editor',
@@ -184,10 +164,6 @@ export async function startTour() {
             'Your main workspace. Pick a problem from the left sidebar, write your solution, then use Run and Submit from the top bar. Supports Python, C++, Java, C, and JavaScript.',
           side: 'right',
           align: 'start',
-          onNextClick: () => {
-            uiStore.setActiveTab('code-editor');
-            setTimeout(() => driverObj.moveNext(), 150);
-          },
         },
       },
       {
