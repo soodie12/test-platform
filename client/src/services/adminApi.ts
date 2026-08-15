@@ -225,6 +225,17 @@ export async function createTestCase(
   return data;
 }
 
+export async function bulkCreateTestCases(
+  problemId: number,
+  testCases: Array<{ input: string; expectedOutput: string; isVisible?: boolean }>,
+): Promise<TestCaseRow[]> {
+  const { data } = await api.post<TestCaseRow[]>(
+    `/admin/problems/${problemId}/testcases/bulk`,
+    { testCases },
+  );
+  return data;
+}
+
 export async function updateTestCase(
   id: number,
   payload: UpdateTestCasePayload,

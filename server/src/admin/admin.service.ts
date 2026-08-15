@@ -31,6 +31,7 @@ import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
 import { UpdateTestCaseStandaloneDto } from './dto/update-testcase.dto';
+import { BulkCreateTestCasesDto } from './dto/bulk-testcase.dto';
 import { SECRETS } from '../config/env';
 import type { McqOption } from '../types/mcq-option.interface';
 
@@ -772,6 +773,33 @@ export class AdminService {
       displayOrder: dto.displayOrder ?? 0,
     });
     return this.testCaseRepo.save(testCase);
+  }
+
+  async bulkCreateTestCases(problemId: number, dto: BulkCreateTestCasesDto) {
+    const problem = await this.problemRepo.findOne({
+      where: { id: problemId },
+    });
+    if (!problem) throw new NotFoundException('Problem not found');
+
+    const maxOrderResult = await this.testCaseRepo
+      .createQueryBuilder('tc')
+      .select('MAX(tc.display_order)', 'max')
+      .where('tc.problem_id = :problemId', { problemId })
+      .getRawOne<{ max: number | null }>();
+
+    let currentOrder = (maxOrderResult?.max ?? -1) + 1;
+
+    const testCasesToSave = dto.testCases.map((item) => {
+      return this.testCaseRepo.create({
+        problemId,
+        input: item.input,
+        expectedOutput: item.expectedOutput,
+        isVisible: item.isVisible ?? false,
+        displayOrder: currentOrder++,
+      });
+    });
+
+    return this.testCaseRepo.save(testCasesToSave);
   }
 
   async updateTestCase(id: number, dto: UpdateTestCaseStandaloneDto) {

@@ -8,6 +8,7 @@ import RegalSelect from '../../components/admin/RegalSelect.vue';
 import type { SelectOption } from '../../components/admin/RegalSelect.vue';
 import TablePagination from '../../components/shared/TablePagination.vue';
 import { usePagination } from '../../composables/usePagination';
+import CsvTestCaseImportModal from '../../components/admin/CsvTestCaseImportModal.vue';
 import type { TestCaseRow } from '../../types/admin';
 import { PAGE_LIMIT } from '../../constants';
 
@@ -15,6 +16,7 @@ const router = useRouter();
 const allProblems = ref<NonNullable<TestCaseRow['problem']>[]>([]);
 const search = ref('');
 const problemFilter = ref<number | ''>('');
+const showCsvModal = ref(false);
 
 const confirmDelete = ref<TestCaseRow | null>(null);
 const deleting = ref(false);
@@ -126,6 +128,14 @@ function truncate(str: string, len = 50) {
           class="w-full sm:w-44 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
           placeholder="Search…"
         />
+        <RegalButton
+          variant="secondary"
+          size="sm"
+          @click="showCsvModal = true"
+        >
+          <span class="material-symbols-outlined text-[16px] mr-1">upload_file</span>
+          Import CSV
+        </RegalButton>
         <RegalButton
           variant="primary"
           size="sm"
@@ -336,6 +346,13 @@ function truncate(str: string, len = 50) {
       :danger="true"
       @confirm="onDelete"
       @cancel="confirmDelete = null"
+    />
+
+    <CsvTestCaseImportModal
+      :show="showCsvModal"
+      :problems="allProblems.map(p => ({ id: p.id, title: p.title, examTitle: p.exam?.title }))"
+      @close="showCsvModal = false"
+      @imported="resetAndLoad"
     />
   </div>
 </template>

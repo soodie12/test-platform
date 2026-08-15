@@ -28,6 +28,7 @@ import { CreateScoreDto } from './dto/create-score.dto';
 import { UpdateScoreDto } from './dto/update-score.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
 import { UpdateTestCaseStandaloneDto } from './dto/update-testcase.dto';
+import { BulkCreateTestCasesDto } from './dto/bulk-testcase.dto';
 import { UsersService } from '../users/users.service';
 import { SubmissionsService } from '../submissions/submissions.service';
 import { ScoringService } from '../submissions/scoring.service';
@@ -249,6 +250,15 @@ export class AdminController {
   @Auth(AuthType.JWT, [AdminGuard])
   async createTestCase(@Body() dto: CreateTestCaseStandaloneDto) {
     return this.adminService.createTestCase(dto);
+  }
+
+  @Post('problems/:problemId/testcases/bulk')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async bulkCreateTestCases(
+    @Param('problemId', ParseIntPipe) problemId: number,
+    @Body() dto: BulkCreateTestCasesDto,
+  ) {
+    return this.adminService.bulkCreateTestCases(problemId, dto);
   }
 
   @Put('testcases/:id')

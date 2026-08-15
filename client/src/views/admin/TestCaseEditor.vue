@@ -1,15 +1,19 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { TestCaseRow } from '../../types/admin';
 import RegalButton from '../../components/admin/RegalButton.vue';
+import CsvTestCaseImportModal from '../../components/admin/CsvTestCaseImportModal.vue';
 
 const props = defineProps<{
   modelValue: TestCaseRow[];
+  problemId?: number;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [rows: TestCaseRow[]];
 }>();
 
+const showCsvModal = ref(false);
 let keyCounter = 0;
 
 function newRow(): TestCaseRow {
@@ -58,6 +62,10 @@ function updateRow(key: string, field: keyof TestCaseRow, value: unknown) {
           modelValue.length !== 1 ? 's' : ''
         }}</span
       >
+      <RegalButton type="button" variant="secondary" @click="showCsvModal = true">
+        <span class="material-symbols-outlined text-[16px] mr-1">upload_file</span>
+        Import CSV
+      </RegalButton>
       <RegalButton type="button" @click="addRow"> + Add Test Case </RegalButton>
     </div>
 
@@ -161,5 +169,12 @@ function updateRow(key: string, field: keyof TestCaseRow, value: unknown) {
         </div>
       </div>
     </div>
+
+    <CsvTestCaseImportModal
+      :show="showCsvModal"
+      :problem-id="props.problemId"
+      @close="showCsvModal = false"
+      @imported="showCsvModal = false"
+    />
   </div>
 </template>
