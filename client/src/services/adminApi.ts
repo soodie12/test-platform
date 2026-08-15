@@ -483,6 +483,13 @@ export interface ProctoringLogEntry {
   eventType: 'FULLSCREEN_EXIT' | 'TAB_SWITCH' | 'WINDOW_BLUR';
   metadata?: Record<string, unknown>;
   createdAt: string;
+  user?: {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    rollNumber?: string;
+  };
 }
 
 export async function getProctoringLogs(examId: number): Promise<ProctoringLogEntry[]> {

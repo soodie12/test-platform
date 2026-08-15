@@ -24,6 +24,7 @@ export class ProctoringService {
   async getLogsByExam(examId: number): Promise<ProctoringLog[]> {
     return this.proctoringRepo.find({
       where: { examId },
+      relations: ['user'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -31,6 +32,7 @@ export class ProctoringService {
   async getLogsByUser(examId: number, userId: number): Promise<ProctoringLog[]> {
     return this.proctoringRepo.find({
       where: { examId, userId },
+      relations: ['user'],
       order: { createdAt: 'DESC' },
     });
   }

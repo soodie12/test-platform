@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   Index,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { User } from '../../entities/user.entity';
 
 export enum ProctoringEventType {
   FULLSCREEN_EXIT = 'FULLSCREEN_EXIT',
@@ -20,6 +23,10 @@ export class ProctoringLog {
 
   @Column({ name: 'user_id' })
   userId!: number;
+
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
+  user?: User;
 
   @Column({ name: 'exam_id' })
   examId!: number;
