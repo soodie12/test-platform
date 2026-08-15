@@ -111,7 +111,13 @@ provide('timerState', { remaining, isWarning, isCritical, isExpired });
 const celebration = useCelebration();
 
 const activeExamId = computed(() => examStore.activeExam?.id);
-const { isFullscreen, requestFullscreen } = useProctoring(activeExamId);
+const { isFullscreen, requestFullscreen, disarmProctoring } = useProctoring(activeExamId);
+
+watch(isExpired, (expired) => {
+  if (expired) {
+    disarmProctoring();
+  }
+});
 
 const loading = ref(true);
 

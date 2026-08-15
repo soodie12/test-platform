@@ -6,6 +6,8 @@ export const ProctoringEventType = {
   FULLSCREEN_EXIT: 'FULLSCREEN_EXIT',
   TAB_SWITCH: 'TAB_SWITCH',
   WINDOW_BLUR: 'WINDOW_BLUR',
+  PASTE_ATTEMPT: 'PASTE_ATTEMPT',
+  COPY_ATTEMPT: 'COPY_ATTEMPT',
 } as const;
 
 export type ProctoringEventType = (typeof ProctoringEventType)[keyof typeof ProctoringEventType];
@@ -15,6 +17,7 @@ export function useProctoring(
   options: {
     requireFullscreen?: boolean;
     trackTabSwitches?: boolean;
+    blockCopyPaste?: boolean;
   } = {},
 ) {
   const toastStore = useToastStore();
@@ -23,11 +26,14 @@ export function useProctoring(
   const isAway = ref(false);
   const requireFullscreen = ref(options.requireFullscreen ?? true);
   const trackTabSwitches = ref(options.trackTabSwitches ?? true);
+  const blockCopyPaste = ref(options.blockCopyPaste ?? true);
 
   let isArmed = false;
   let lastViolationTime = 0;
 
   function checkFullscreenState() {
+    if (!isArmed) return;
+
     const fsElement =
       document.fullscreenElement ||
       (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement ||
@@ -36,8 +42,7 @@ export function useProctoring(
     const currentlyFs = !!fsElement;
     isFullscreen.value = currentlyFs;
 
-    // Only log exit violation if we were armed (already launched into exam workspace)
-    if (!currentlyFs && requireFullscreen.value && isArmed) {
+    if (!currentlyFs && requireFullscreen.value) {
       logViolation(ProctoringEventType.FULLSCREEN_EXIT, {
         reason: 'Student exited fullscreen mode',
       });
@@ -64,11 +69,27 @@ export function useProctoring(
     }
   }
 
+  async function exitFullscreen() {
+    isArmed = false;
+    isFullscreen.value = true;
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function disarmProctoring() {
+    isArmed = false;
+    isFullscreen.value = true;
+  }
+
   function logViolation(type: ProctoringEventType, metadata?: Record<string, unknown>) {
     if (!isArmed) return;
 
     const now = Date.now();
-    // Throttle duplicate events within 1.5s
     if (now - lastViolationTime < 1500) return;
     lastViolationTime = now;
 
@@ -83,6 +104,16 @@ export function useProctoring(
       toastStore.add(
         'error',
         `Proctoring Warning: Exited fullscreen mode! (Violation #${violationCount.value})`,
+      );
+    } else if (type === ProctoringEventType.PASTE_ATTEMPT) {
+      toastStore.add(
+        'error',
+        `Proctoring Warning: External paste is disabled! (Violation #${violationCount.value})`,
+      );
+    } else if (type === ProctoringEventType.COPY_ATTEMPT) {
+      toastStore.add(
+        'error',
+        `Proctoring Warning: Copying text is disabled! (Violation #${violationCount.value})`,
       );
     }
 
@@ -119,14 +150,32 @@ export function useProctoring(
     });
   }
 
+  function handlePaste(e: ClipboardEvent) {
+    if (!blockCopyPaste.value || !isArmed) return;
+    e.preventDefault();
+    logViolation(ProctoringEventType.PASTE_ATTEMPT, {
+      reason: 'Attempted to paste content',
+    });
+  }
+
+  function handleCopy(e: ClipboardEvent) {
+    if (!blockCopyPaste.value || !isArmed) return;
+    e.preventDefault();
+    logViolation(ProctoringEventType.COPY_ATTEMPT, {
+      reason: 'Attempted to copy content',
+    });
+  }
+
   onMounted(() => {
     document.addEventListener('fullscreenchange', checkFullscreenState);
     document.addEventListener('webkitfullscreenchange', checkFullscreenState);
     document.addEventListener('mozfullscreenchange', checkFullscreenState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
+    document.addEventListener('paste', handlePaste, true);
+    document.addEventListener('copy', handleCopy, true);
+    document.addEventListener('cut', handleCopy, true);
 
-    // Auto-launch fullscreen on workspace mount & arm proctoring after 500ms
     void requestFullscreen().then(() => {
       setTimeout(() => {
         isArmed = true;
@@ -141,6 +190,9 @@ export function useProctoring(
     document.removeEventListener('mozfullscreenchange', checkFullscreenState);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleBlur);
+    document.removeEventListener('paste', handlePaste, true);
+    document.removeEventListener('copy', handleCopy, true);
+    document.removeEventListener('cut', handleCopy, true);
   });
 
   return {
@@ -150,5 +202,7 @@ export function useProctoring(
     requireFullscreen,
     trackTabSwitches,
     requestFullscreen,
+    exitFullscreen,
+    disarmProctoring,
   };
 }

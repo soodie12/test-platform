@@ -13,6 +13,8 @@ export enum ProctoringEventType {
   FULLSCREEN_EXIT = 'FULLSCREEN_EXIT',
   TAB_SWITCH = 'TAB_SWITCH',
   WINDOW_BLUR = 'WINDOW_BLUR',
+  PASTE_ATTEMPT = 'PASTE_ATTEMPT',
+  COPY_ATTEMPT = 'COPY_ATTEMPT',
 }
 
 @Entity('proctoring_logs')
@@ -32,8 +34,7 @@ export class ProctoringLog {
   examId!: number;
 
   @Column({
-    type: 'enum',
-    enum: ProctoringEventType,
+    type: 'varchar',
     name: 'event_type',
   })
   eventType!: ProctoringEventType;

@@ -63,6 +63,17 @@ function confirmAndSubmit() {
   showSubmitConfirm.value = false;
   runSubmit.submit();
 }
+
+async function handleExitExam() {
+  try {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      await document.exitFullscreen();
+    }
+  } catch {
+    /* ignore */
+  }
+  router.push('/');
+}
 const pastedIndex = ref<number | null>(null);
 
 function onCopy(e: ClipboardEvent) {
@@ -361,6 +372,17 @@ onUnmounted(() => {
         @click="uiStore.openHelpModal()"
       >
         <span class="material-symbols-outlined text-[18px]">help</span>
+      </button>
+
+      <!-- Exit Exam button (workspace only) -->
+      <button
+        v-if="route.name === 'workspace'"
+        class="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-all cursor-pointer"
+        title="Exit exam workspace"
+        @click="handleExitExam"
+      >
+        <span class="material-symbols-outlined text-[15px]">logout</span>
+        Exit Exam
       </button>
 
       <!-- Theme toggle -->
