@@ -172,42 +172,14 @@ function scrollTo(id: string) {
   if (el) el.scrollIntoView({ behavior: 'smooth' });
 }
 
-const steps = [
-  {
-    icon: 'person_add',
-    title: 'Register & Login',
-    desc: 'Create your account, then authenticate to receive an access token for all subsequent requests.',
-  },
-  {
-    icon: 'how_to_reg',
-    title: 'Enroll in the Exam',
-    desc: 'Enrollment is required before the exam window opens - without it, problems and submissions are inaccessible.',
-  },
-  {
-    icon: 'menu_book',
-    title: 'Explore & Fetch Problems',
-    desc: 'Study the API docs carefully, then retrieve the problem set once the exam window is active.',
-  },
-  {
-    icon: 'code',
-    title: 'Write Code',
-    desc: 'Solve each problem in the built-in code editor using any of the supported languages.',
-  },
-  {
-    icon: 'publish',
-    title: 'Test & Submit',
-    desc: 'Run against sample cases, then submit for full grading against all hidden test cases.',
-  },
-];
-
 const details = [
   {
     title: 'First 15 Minutes - Read & Prepare',
-    desc: 'Use the opening window to go through the rules, API docs, and understand the contest flow before coding.',
+    desc: 'Use the opening window to go through the rules, problem statements, and understand the contest flow before coding.',
   },
   {
     title: 'Start When Ready',
-    desc: 'Once you understand the flow, begin solving problems at your own pace within the allotted time.',
+    desc: 'Begin solving problems at your own pace within the allotted time in our built-in code editor.',
   },
   {
     title: 'Time-based Scoring',
@@ -266,12 +238,6 @@ const rules = [
       <template #nav>
         <button
           class="text-sm font-medium hover:text-primary transition-colors"
-          @click="scrollTo('how-it-works')"
-        >
-          How It Works
-        </button>
-        <button
-          class="text-sm font-medium hover:text-primary transition-colors"
           @click="scrollTo('details')"
         >
           Details
@@ -301,12 +267,6 @@ const rules = [
         v-if="mobileMenuOpen"
         class="md:hidden fixed inset-x-0 top-[57px] z-40 bg-white/95 dark:bg-accent-navy/95 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-4 shadow-xl"
       >
-        <button
-          class="text-sm font-medium py-2 hover:text-primary"
-          @click="scrollTo('how-it-works')"
-        >
-          How It Works
-        </button>
         <button
           class="text-sm font-medium py-2 hover:text-primary"
           @click="scrollTo('details')"
@@ -501,9 +461,7 @@ const rules = [
                 <p
                   class="text-lg text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed"
                 >
-                  Test your API knowledge in a unique coding contest. Read docs,
-                  call endpoints, fetch problems, and solve them - all through
-                  APIs.
+                  Solve algorithmic problems in our modern code editor with instant testcase evaluation, ICPC scoring, and real-time leaderboards.
                 </p>
               </div>
 
@@ -586,10 +544,9 @@ const rules = [
             </template>
           </div>
 
-          <!-- Right: Terminal card -->
+          <!-- Right: Code Execution Terminal Card -->
           <div class="flex-shrink-0 w-full lg:w-[480px]">
             <div class="terminal-float relative" style="border-radius: 14px">
-              <!-- Glow ring -->
               <div
                 class="absolute -inset-px pointer-events-none opacity-60"
                 style="
@@ -605,7 +562,6 @@ const rules = [
                 aria-hidden="true"
               ></div>
 
-              <!-- Terminal window -->
               <div
                 class="relative overflow-hidden bg-slate-950 border border-slate-700/50 shadow-2xl"
                 style="border-radius: 14px"
@@ -623,70 +579,34 @@ const rules = [
                     class="flex-1 h-5 bg-slate-800 flex items-center px-2.5"
                     style="border-radius: 4px"
                   >
-                    <span class="text-[10px] text-slate-500 font-mono truncate"
-                      >POST /api/auth/register</span
+                    <span class="text-[10px] text-slate-400 font-mono truncate"
+                      >solution.py — Instant Code Execution</span
                     >
                   </div>
                 </div>
 
-                <!-- Code body -->
+                <!-- Code & Execution Result body -->
                 <div
                   class="p-6 font-mono text-[13px] leading-relaxed select-none"
                 >
-                  <!-- Method badge + path -->
-                  <div class="flex items-center gap-2 mb-4">
-                    <span
-                      class="px-1.5 py-0.5 text-[10px] font-bold bg-primary/20 text-primary"
-                      style="border-radius: 3px"
-                      >POST</span
-                    >
-                    <span class="text-slate-300">/api/auth/register</span>
-                  </div>
+                  <div class="text-slate-500 mb-1"># Greenlight Code Execution Engine</div>
+                  <div class="text-sky-300 font-bold mb-2">def solve(nums: List[int], target: int) -> List[int]:</div>
+                  <div class="pl-4 text-slate-300 mb-1">seen = {}</div>
+                  <div class="pl-4 text-slate-300 mb-1">for i, num in enumerate(nums):</div>
+                  <div class="pl-8 text-slate-300 mb-1">diff = target - num</div>
+                  <div class="pl-8 text-slate-300 mb-1">if diff in seen: return [seen[diff], i]</div>
+                  <div class="pl-8 text-slate-300 mb-3">seen[num] = i</div>
 
-                  <!-- Request body -->
-                  <div class="text-slate-500 mb-0.5">{</div>
-                  <div class="pl-5 mb-0.5">
-                    <span class="text-emerald-400">"rollNumber"</span>
-                    <span class="text-slate-500">: </span>
-                    <span class="text-amber-300">"20CS101"</span>
-                    <span class="text-slate-500">,</span>
-                  </div>
-                  <div class="pl-5 mb-0.5">
-                    <span class="text-emerald-400">"password"</span>
-                    <span class="text-slate-500">: </span>
-                    <span class="text-amber-300">"••••••••"</span>
-                    <span class="text-slate-500">,</span>
-                  </div>
-                  <div class="pl-5">
-                    <span class="text-emerald-400">"qaRoleOptIn"</span>
-                    <span class="text-slate-500">: </span>
-                    <span class="text-purple-400">true</span>
-                  </div>
-                  <div class="text-slate-500 mb-5">}</div>
-
-                  <!-- Response -->
-                  <div class="flex items-center gap-2 mb-2">
-                    <span class="text-slate-600 text-[11px]">Response</span>
-                    <span
-                      class="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/15 text-emerald-400"
-                      style="border-radius: 3px"
-                      >201 Created</span
-                    >
-                  </div>
-                  <div class="text-slate-500 mb-0.5">{</div>
-                  <div class="pl-5 mb-0.5">
-                    <span class="text-emerald-400">"accessToken"</span>
-                    <span class="text-slate-500">: </span>
-                    <span class="text-sky-300">"eyJhbGciOiJIUzI1..."</span>
-                  </div>
-                  <div class="text-slate-500 mb-5">}</div>
-
-                  <!-- Prompt line -->
-                  <div class="flex items-center gap-2">
-                    <span class="text-primary font-bold">▸</span>
-                    <span
-                      class="cursor-blink w-[9px] h-[16px] bg-primary/80 inline-block"
-                    ></span>
+                  <!-- Testcase Status Footer -->
+                  <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 rounded"
+                        >ACCEPTED</span
+                      >
+                      <span class="text-[11px] text-slate-400">All 10 Test Cases Passed</span>
+                    </div>
+                    <span class="text-[11px] text-emerald-400 font-bold">2ms · 14.1MB</span>
                   </div>
                 </div>
               </div>
@@ -695,100 +615,7 @@ const rules = [
         </div>
       </section>
 
-      <!-- ══════════════════════════════════════════════════════════════ -->
-      <!-- HOW IT WORKS                                                  -->
-      <!-- ══════════════════════════════════════════════════════════════ -->
-      <section
-        id="how-it-works"
-        class="py-20 md:py-24 bg-slate-50/70 dark:bg-accent-navy/20 backdrop-blur-sm"
-      >
-        <div class="max-w-[1200px] mx-auto px-6">
-          <!-- Heading -->
-          <div class="mb-14 text-center">
-            <p
-              class="text-[11px] font-bold uppercase tracking-[0.2em] text-primary mb-3"
-            >
-              Process
-            </p>
-            <h2
-              class="text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-3"
-            >
-              How It Works
-            </h2>
-            <div
-              class="h-1 w-12 bg-primary mx-auto"
-              style="border-radius: 2px"
-            ></div>
-          </div>
 
-          <!-- Steps grid with connecting line -->
-          <div class="relative">
-            <!-- Connecting line - desktop only -->
-            <div
-              class="hidden lg:block absolute top-[28px] left-[10%] right-[10%] h-px"
-              style="
-                background: linear-gradient(
-                  to right,
-                  transparent,
-                  rgba(148, 163, 184, 0.3),
-                  rgba(148, 163, 184, 0.3),
-                  transparent
-                );
-              "
-              aria-hidden="true"
-            ></div>
-
-            <div
-              class="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5"
-            >
-              <div
-                v-for="(step, i) in steps"
-                :key="i"
-                class="group flex flex-col gap-4 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 hover:border-primary/40 dark:hover:border-primary/30 p-6 pt-0 transition-all duration-200 hover:shadow-lg hover:shadow-primary/5 dark:-translate-y-0 hover:-translate-y-0.5"
-                style="border-radius: 10px"
-              >
-                <!-- Step number row -->
-                <div
-                  class="flex items-center justify-between -mx-6 px-6 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800/60"
-                >
-                  <span
-                    class="text-5xl font-black leading-none select-none"
-                    style="
-                      background: linear-gradient(
-                        135deg,
-                        rgb(var(--color-primary) / 0.85),
-                        rgb(var(--color-primary) / 0.25)
-                      );
-                      -webkit-background-clip: text;
-                      background-clip: text;
-                      -webkit-text-fill-color: transparent;
-                    "
-                    >{{ String(i + 1).padStart(2, '0') }}</span
-                  >
-                  <div
-                    class="w-10 h-10 flex items-center justify-center bg-primary/8 dark:bg-primary/10 text-primary group-hover:bg-primary/15 transition-colors"
-                    style="border-radius: 8px"
-                  >
-                    <span class="material-symbols-outlined text-[20px]">{{
-                      step.icon
-                    }}</span>
-                  </div>
-                </div>
-                <h3
-                  class="text-[15px] font-bold text-slate-900 dark:text-white"
-                >
-                  {{ step.title }}
-                </h3>
-                <p
-                  class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed"
-                >
-                  {{ step.desc }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <!-- ══════════════════════════════════════════════════════════════ -->
       <!-- CONTEST DETAILS                                               -->
