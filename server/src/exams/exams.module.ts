@@ -10,6 +10,7 @@ import { ProblemToExam } from '../entities/problem-to-exam.entity';
 import { Score } from '../entities/score.entity';
 import { Submission } from '../entities/submission.entity';
 import { ExamEnrollment } from '../entities/exam-enrollment.entity';
+import { ExamAccommodation } from '../entities/exam-accommodation.entity';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ExamEnrollment } from '../entities/exam-enrollment.entity';
       Score,
       Submission,
       ExamEnrollment,
+      ExamAccommodation,
     ]),
   ],
   controllers: [ExamsController, EnrollmentController],

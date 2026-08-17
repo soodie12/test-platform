@@ -17,6 +17,7 @@ import { Submission } from '../entities/submission.entity';
 import { RunLog } from '../entities/run-log.entity';
 import { ProblemView } from '../entities/problem-view.entity';
 import { JwtService } from '@nestjs/jwt';
+import { ExamAccommodation } from '../entities/exam-accommodation.entity';
 import { UsersService } from '../users/users.service';
 import { SubmissionsService } from '../submissions/submissions.service';
 import { ScoringService } from '../submissions/scoring.service';
@@ -46,6 +47,8 @@ export class AdminService {
     private readonly problemToExamRepo: Repository<ProblemToExam>,
     @InjectRepository(TestCase)
     private readonly testCaseRepo: Repository<TestCase>,
+    @InjectRepository(ExamAccommodation)
+    private readonly accommodationRepo: Repository<ExamAccommodation>,
     private readonly usersService: UsersService,
     private readonly submissionsService: SubmissionsService,
     private readonly scoringService: ScoringService,

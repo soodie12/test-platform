@@ -112,8 +112,11 @@ export class ExamsController {
     description: 'Unauthorized - missing or invalid JWT token',
   })
   @ApiResponse({ status: 404, description: 'Exam not found' })
-  async getStatus(@Param('id', ParseIntPipe) id: number) {
-    return this.examsService.getStatus(id);
+  async getStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser('id') userId?: number,
+  ) {
+    return this.examsService.getStatus(id, userId);
   }
 
   @Get(':examId/my-progress')

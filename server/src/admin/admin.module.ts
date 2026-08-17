@@ -10,6 +10,7 @@ import { Problem } from '../entities/problem.entity';
 import { TestCase } from '../entities/test-case.entity';
 import { LeaderboardView } from '../entities/leaderboard-view.entity';
 import { ProblemToExam } from '../entities/problem-to-exam.entity';
+import { ExamAccommodation } from '../entities/exam-accommodation.entity';
 import { UsersModule } from '../users/users.module';
 import { SubmissionsModule } from '../submissions/submissions.module';
 import { ProblemsModule } from '../problems/problems.module';
@@ -24,6 +25,7 @@ import { AutosaveModule } from '../autosave/autosave.module';
       TestCase,
       LeaderboardView,
       ProblemToExam,
+      ExamAccommodation,
     ]),
     UsersModule,
     SubmissionsModule,

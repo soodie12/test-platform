@@ -9,6 +9,7 @@ import {
 } from 'vue';
 
 import { themeColors } from '../config/theme';
+import { useAuthStore } from '../stores/auth';
 
 // Use the minimal editor API entry - avoids pulling in all 100+ language servers
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
@@ -100,6 +101,9 @@ export function useMonaco(
     if (!containerRef.value) return;
     registerTheme();
 
+    const authStore = useAuthStore();
+    const isAdmin = authStore.user?.role === 'ADMIN';
+
     lastSetValue = code.value;
     editor.value = markRaw(
       monaco.editor.create(containerRef.value, {
@@ -119,42 +123,44 @@ export function useMonaco(
         wordWrap: 'off',
         smoothScrolling: true,
         cursorBlinking: 'smooth',
-        contextmenu: false,
+        contextmenu: isAdmin,
       }),
     );
 
-    // Capture-phase event listeners to intercept copy/paste/cut inside Monaco
-    const handleDomPaste = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
-    };
-
-    const handleDomCopy = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
-    };
-
-    const domElem = containerRef.value;
-    domElem.addEventListener('paste', handleDomPaste, true);
-    domElem.addEventListener('copy', handleDomCopy, true);
-    domElem.addEventListener('cut', handleDomCopy, true);
-    domElem.addEventListener('contextmenu', (e) => e.preventDefault(), true);
-
-    // Intercept keyboard commands (Ctrl+V, Cmd+V, Ctrl+C, Cmd+C) in Monaco
-    editor.value.onKeyDown((e) => {
-      const isMod = e.ctrlKey || e.metaKey;
-      if (isMod && (e.code === 'KeyV' || e.code === 'KeyC' || e.code === 'KeyX')) {
+    // Only restrict copy/paste & contextmenu for non-admin users (students during exams)
+    if (!isAdmin) {
+      const handleDomPaste = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        if (e.code === 'KeyV') {
-          window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
-        } else {
-          window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
+        window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
+      };
+
+      const handleDomCopy = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
+      };
+
+      const domElem = containerRef.value;
+      domElem.addEventListener('paste', handleDomPaste, true);
+      domElem.addEventListener('copy', handleDomCopy, true);
+      domElem.addEventListener('cut', handleDomCopy, true);
+      domElem.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+
+      // Intercept keyboard commands (Ctrl+V, Cmd+V, Ctrl+C, Cmd+C) in Monaco for students
+      editor.value.onKeyDown((e) => {
+        const isMod = e.ctrlKey || e.metaKey;
+        if (isMod && (e.code === 'KeyV' || e.code === 'KeyC' || e.code === 'KeyX')) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.code === 'KeyV') {
+            window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
+          } else {
+            window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
+          }
         }
-      }
-    });
+      });
+    }
 
     // Monaco → Vue: user typed something.
     contentDisposable = editor.value.onDidChangeModelContent(() => {

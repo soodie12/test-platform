@@ -13,6 +13,7 @@ import { ProblemToExam } from '../entities/problem-to-exam.entity';
 import { Score } from '../entities/score.entity';
 import { Submission } from '../entities/submission.entity';
 import { ExamEnrollment } from '../entities/exam-enrollment.entity';
+import { ExamAccommodation } from '../entities/exam-accommodation.entity';
 
 @Injectable()
 export class ExamsService {
@@ -29,6 +30,8 @@ export class ExamsService {
     private readonly submissionRepo: Repository<Submission>,
     @InjectRepository(ExamEnrollment)
     private readonly enrollmentRepo: Repository<ExamEnrollment>,
+    @InjectRepository(ExamAccommodation)
+    private readonly accommodationRepo: Repository<ExamAccommodation>,
   ) {}
 
   // Returns all active exams that have not yet ended (upcoming or in-progress).
@@ -45,11 +48,22 @@ export class ExamsService {
     return exam;
   }
 
-  async getStatus(examId: number) {
+  async getStatus(examId: number, userId?: number) {
     const exam = await this.getById(examId);
+    let examEndTime = exam.endTime;
+
+    if (userId) {
+      const accom = await this.accommodationRepo.findOne({
+        where: { examId, userId },
+      });
+      if (accom && accom.extraMinutes > 0) {
+        examEndTime = new Date(exam.endTime.getTime() + accom.extraMinutes * 60000);
+      }
+    }
+
     return {
       examId: exam.id,
-      examEndTime: exam.endTime,
+      examEndTime,
       serverTime: new Date(),
     };
   }

@@ -273,8 +273,12 @@ const langStyle = computed(() => {
           <span class="toolbar-tip">Reset</span>
         </button>
 
-        <!-- Copy -->
-        <button class="toolbar-btn group" @click="copyCode">
+        <!-- Copy (Admin only) -->
+        <button
+          v-if="authStore.user?.role === 'ADMIN'"
+          class="toolbar-btn group"
+          @click="copyCode"
+        >
           <span
             class="material-symbols-outlined text-[15px]"
             :class="copied ? 'text-emerald-400' : ''"

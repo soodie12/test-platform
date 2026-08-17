@@ -152,22 +152,6 @@ const lastGlobalViolationMap: Record<string, number> = {};
     });
   }
 
-  function handlePaste(e: ClipboardEvent) {
-    if (!blockCopyPaste.value || !isArmed) return;
-    e.preventDefault();
-    logViolation(ProctoringEventType.PASTE_ATTEMPT, {
-      reason: 'Attempted to paste content',
-    });
-  }
-
-  function handleCopy(e: ClipboardEvent) {
-    if (!blockCopyPaste.value || !isArmed) return;
-    e.preventDefault();
-    logViolation(ProctoringEventType.COPY_ATTEMPT, {
-      reason: 'Attempted to copy content',
-    });
-  }
-
   function onMonacoPasteBlocked() {
     if (!blockCopyPaste.value || !isArmed) return;
     logViolation(ProctoringEventType.PASTE_ATTEMPT, {
@@ -188,9 +172,6 @@ const lastGlobalViolationMap: Record<string, number> = {};
     document.addEventListener('mozfullscreenchange', checkFullscreenState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
-    document.addEventListener('paste', handlePaste, true);
-    document.addEventListener('copy', handleCopy, true);
-    document.addEventListener('cut', handleCopy, true);
     window.addEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
     window.addEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
 
@@ -208,9 +189,6 @@ const lastGlobalViolationMap: Record<string, number> = {};
     document.removeEventListener('mozfullscreenchange', checkFullscreenState);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleBlur);
-    document.removeEventListener('paste', handlePaste, true);
-    document.removeEventListener('copy', handleCopy, true);
-    document.removeEventListener('cut', handleCopy, true);
     window.removeEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
     window.removeEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
   });
