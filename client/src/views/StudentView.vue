@@ -61,8 +61,8 @@ watch(
         mode: 'submit',
         problemTitle: editorStore.activeProblem?.title ?? '',
         score: s.score,
-        passedTests: s.passedTests,
-        totalTests: s.totalTests,
+        passedTests: s.passedTestCases ?? s.passedTests ?? 0,
+        totalTests: s.totalTestCases ?? s.totalTests ?? 0,
         language: editorStore.language.name,
       };
     }

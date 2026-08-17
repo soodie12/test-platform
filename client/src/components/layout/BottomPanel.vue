@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useUiStore } from '../../stores/ui';
 import { useRunSubmitStore } from '../../stores/runSubmit';
 import { useAuthStore } from '../../stores/auth';
@@ -17,6 +17,41 @@ watch(
   },
 );
 const expandedErrors = ref<Set<number>>(new Set());
+
+const submissionTestResults = computed(() => {
+  const s = runSubmit.submission;
+  if (!s) return [];
+  const raw = s as unknown as Record<string, unknown>;
+  return (raw.testResults ?? s.results ?? []) as Array<{
+    index: number;
+    passed: boolean;
+    status: string;
+    stdout?: string | null;
+    stderr?: string | null;
+    compileOutput?: string | null;
+    message?: string | null;
+    time?: number | string | null;
+    memory?: number | null;
+  }>;
+});
+
+const subPassCount = computed(() => {
+  const s = runSubmit.submission;
+  if (!s) return 0;
+  const raw = s as unknown as Record<string, unknown>;
+  if (typeof raw.passedTestCases === 'number') return raw.passedTestCases;
+  if (typeof s.passedTests === 'number') return s.passedTests;
+  return submissionTestResults.value.filter((r) => r.passed).length;
+});
+
+const subTotalCount = computed(() => {
+  const s = runSubmit.submission;
+  if (!s) return 0;
+  const raw = s as unknown as Record<string, unknown>;
+  if (typeof raw.totalTestCases === 'number') return raw.totalTestCases;
+  if (typeof s.totalTests === 'number') return s.totalTests;
+  return submissionTestResults.value.length;
+});
 
 function toggleError(i: number) {
   if (expandedErrors.value.has(i)) expandedErrors.value.delete(i);
@@ -389,10 +424,7 @@ function verdictIcon(verdict: string) {
                 runSubmit.submission.verdict.replace('_', ' ')
               }}</span>
               <span class="text-[10px] opacity-70">
-                {{ runSubmit.submission.passedTests }}/{{
-                  runSubmit.submission.totalTests
-                }}
-                test cases passed
+                {{ subPassCount }}/{{ subTotalCount }} test cases passed
               </span>
             </div>
             <span
@@ -414,11 +446,11 @@ function verdictIcon(verdict: string) {
 
           <!-- Case dot grid -->
           <div
-            v-if="(runSubmit.submission.results ?? []).length > 0"
+            v-if="submissionTestResults.length > 0"
             class="flex flex-wrap gap-1.5 mb-4"
           >
             <button
-              v-for="r in runSubmit.submission.results ?? []"
+              v-for="r in submissionTestResults"
               :key="r.index"
               class="case-dot cursor-pointer hover:scale-110 transition-transform"
               :class="
@@ -435,7 +467,7 @@ function verdictIcon(verdict: string) {
 
           <!-- Detailed rows for failed cases (inline expansion) -->
           <div
-            v-if="(runSubmit.submission.results ?? []).some((r) => !r.passed)"
+            v-if="submissionTestResults.some((r) => !r.passed)"
             class="flex flex-col gap-1"
           >
             <p
@@ -444,9 +476,7 @@ function verdictIcon(verdict: string) {
               Failed Cases
             </p>
             <template
-              v-for="r in (runSubmit.submission.results ?? []).filter(
-                (r) => !r.passed,
-              )"
+              v-for="r in submissionTestResults.filter((r) => !r.passed)"
               :key="'sf-' + r.index"
             >
               <div class="case-row case-fail">

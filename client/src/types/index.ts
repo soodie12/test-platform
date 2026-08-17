@@ -62,14 +62,19 @@ export interface Submission {
   userId: number;
   problemId: number;
   examId: number;
-  sourceCode: string;
+  sourceCode?: string;
+  code?: string;
   languageId: number;
   verdict: string;
   score: number;
-  passedTests: number;
-  totalTests: number;
-  results: JudgeResult[];
-  createdAt: string;
+  passedTests?: number;
+  passedTestCases?: number;
+  totalTests?: number;
+  totalTestCases?: number;
+  results?: JudgeResult[];
+  testResults?: JudgeResult[];
+  createdAt?: string;
+  submittedAt?: string;
 }
 
 export interface JudgeResult {
