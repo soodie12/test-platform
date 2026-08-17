@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted, type Ref } from 'vue';
 import api from '../services/api';
 import { useToastStore } from '../stores/toast';
+import { useAuthStore } from '../stores/auth';
 
 export const ProctoringEventType = {
   FULLSCREEN_EXIT: 'FULLSCREEN_EXIT',
@@ -21,6 +22,7 @@ export function useProctoring(
   } = {},
 ) {
   const toastStore = useToastStore();
+  const authStore = useAuthStore();
   const isFullscreen = ref(true);
   const violationCount = ref(0);
   const isAway = ref(false);
@@ -152,8 +154,34 @@ const lastGlobalViolationMap: Record<string, number> = {};
     });
   }
 
+  function clearClipboard() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        void navigator.clipboard.writeText('');
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (!isArmed || authStore.user?.role === 'ADMIN') return;
+    // Intercept Windows Clipboard History (Win+V / Ctrl+V with Alt) and Mac Paste Stack
+    if (e.code === 'KeyV' && (e.altKey || e.metaKey || e.ctrlKey)) {
+      if (e.altKey || e.shiftKey) {
+        e.preventDefault();
+        e.stopPropagation();
+        clearClipboard();
+        logViolation(ProctoringEventType.PASTE_ATTEMPT, {
+          reason: 'Attempted to open OS clipboard history',
+        });
+      }
+    }
+  }
+
   function onMonacoPasteBlocked() {
     if (!blockCopyPaste.value || !isArmed) return;
+    clearClipboard();
     logViolation(ProctoringEventType.PASTE_ATTEMPT, {
       reason: 'Attempted to paste content in editor',
     });
@@ -161,6 +189,7 @@ const lastGlobalViolationMap: Record<string, number> = {};
 
   function onMonacoCopyBlocked() {
     if (!blockCopyPaste.value || !isArmed) return;
+    clearClipboard();
     logViolation(ProctoringEventType.COPY_ATTEMPT, {
       reason: 'Attempted to copy content from editor',
     });
@@ -172,12 +201,14 @@ const lastGlobalViolationMap: Record<string, number> = {};
     document.addEventListener('mozfullscreenchange', checkFullscreenState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('keydown', handleKeyDown, true);
     window.addEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
     window.addEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
 
     void requestFullscreen().then(() => {
       setTimeout(() => {
         isArmed = true;
+        clearClipboard();
         checkFullscreenState();
       }, 500);
     });
@@ -189,6 +220,7 @@ const lastGlobalViolationMap: Record<string, number> = {};
     document.removeEventListener('mozfullscreenchange', checkFullscreenState);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleBlur);
+    window.removeEventListener('keydown', handleKeyDown, true);
     window.removeEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
     window.removeEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
   });
