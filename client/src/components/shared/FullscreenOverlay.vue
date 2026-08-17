@@ -59,7 +59,7 @@ const emit = defineEmits<{
   height: 64px;
   border-radius: 50%;
   background: rgba(0, 214, 108, 0.12);
-  color: #00d66c;
+  color: #00d9b4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,7 +88,7 @@ const emit = defineEmits<{
   gap: 8px;
   width: 100%;
   padding: 14px 20px;
-  background: #00d66c;
+  background: #00d9b4;
   color: #0b0f19;
   font-weight: 700;
   font-size: 14px;

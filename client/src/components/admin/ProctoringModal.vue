@@ -278,7 +278,7 @@ function formatTime(dateStr: string) {
 
 .icon {
   font-size: 28px;
-  color: #00d66c;
+  color: #00d9b4;
 }
 
 .title {
@@ -327,7 +327,7 @@ function formatTime(dateStr: string) {
 }
 
 .tab-btn.active {
-  color: #00d66c;
+  color: #00d9b4;
   background: rgba(0, 214, 108, 0.1);
 }
 
@@ -532,7 +532,7 @@ function formatTime(dateStr: string) {
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #00d66c;
+  border-top-color: #00d9b4;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
   display: inline-block;

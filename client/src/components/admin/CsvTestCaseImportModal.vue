@@ -491,7 +491,7 @@ async function confirmImport() {
 
 .icon {
   font-size: 28px;
-  color: #00d66c;
+  color: #00d9b4;
 }
 
 .title {
@@ -535,7 +535,7 @@ async function confirmImport() {
 }
 
 .step-item.active {
-  color: #00d66c;
+  color: #00d9b4;
 }
 
 .step-num {
@@ -550,7 +550,7 @@ async function confirmImport() {
 }
 
 .step-item.active .step-num {
-  background: #00d66c;
+  background: #00d9b4;
   color: #0d1117;
   font-weight: 800;
 }
@@ -581,7 +581,7 @@ async function confirmImport() {
 }
 
 .dropzone:hover {
-  border-color: #00d66c;
+  border-color: #00d9b4;
   background: rgba(0, 214, 108, 0.05);
 }
 
@@ -590,7 +590,7 @@ async function confirmImport() {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #00d66c;
+  background: #00d9b4;
   color: #0d1117;
   font-weight: 700;
   font-size: 13px;
@@ -613,7 +613,7 @@ async function confirmImport() {
 .badge {
   font-size: 11px;
   background: rgba(0, 214, 108, 0.15);
-  color: #00d66c;
+  color: #00d9b4;
   padding: 2px 8px;
   border-radius: 999px;
   font-weight: 600;
@@ -739,7 +739,7 @@ async function confirmImport() {
 }
 
 .btn-primary {
-  background: #00d66c;
+  background: #00d9b4;
   color: #0d1117;
   font-weight: 700;
   font-size: 13px;

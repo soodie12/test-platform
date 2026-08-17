@@ -4,6 +4,6 @@ export const brand = {
   logoPath: (import.meta.env.VITE_LOGO_PATH as string) || '/logo.svg',
   apiTitle: (import.meta.env.VITE_API_TITLE as string) || 'API Reference',
   apiVersion: (import.meta.env.VITE_API_VERSION as string) || 'v1.0',
-  primaryColor: (import.meta.env.VITE_PRIMARY_COLOR as string) || '#00D66C',
-  accentColor: (import.meta.env.VITE_ACCENT_COLOR as string) || '#10B981',
+  primaryColor: (import.meta.env.VITE_PRIMARY_COLOR as string) || '#00d9b4',
+  accentColor: (import.meta.env.VITE_ACCENT_COLOR as string) || '#00d9b4',
 } as const;
