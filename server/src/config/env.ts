@@ -23,7 +23,7 @@ export const SECRETS = Object.freeze({
   // Application
   NODE_ENV: optional('NODE_ENV', 'dev'),
   PORT: parseInt(optional('PORT', '3000'), 10),
-  APP_NAME: optional('APP_NAME', 'CodeVerdict'),
+  APP_NAME: optional('APP_NAME', 'Greenlight'),
 
   // Auth
   JWT_SECRET: required('JWT_SECRET'),

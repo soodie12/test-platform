@@ -1,6 +1,6 @@
-# 🚀 Production Server Deployment Guide - CodeVerdict
+# 🚀 Production Server Deployment Guide - Greenlight
 
-This guide provides step-by-step instructions to deploy **CodeVerdict** on a Linux server (Ubuntu 22.04 LTS / Debian 12 / RHEL / AWS / DigitalOcean VPS) using **Docker Compose** with self-hosted **Judge0**, **PostgreSQL 17**, and an **Nginx** reverse proxy with SSL (Let's Encrypt).
+This guide provides step-by-step instructions to deploy **Greenlight** on a Linux server (Ubuntu 22.04 LTS / Debian 12 / RHEL / AWS / DigitalOcean VPS) using **Docker Compose** with self-hosted **Judge0**, **PostgreSQL 17**, and an **Nginx** reverse proxy with SSL (Let's Encrypt).
 
 ---
 
@@ -63,7 +63,7 @@ docker compose version
 
 ---
 
-## 📂 Step 3: Clone CodeVerdict & Configure Environment
+## 📂 Step 3: Clone Repository & Configure Environment
 
 ### 1. Clone Repository
 ```bash
@@ -100,7 +100,7 @@ DB_NAME=gl_code_platform
 
 # ── Application ───────────────────────────────────────────────────────────────
 PORT=3000
-APP_NAME=CodeVerdict
+APP_NAME=Greenlight
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 JWT_SECRET=your_generated_jwt_secret_here
@@ -135,7 +135,7 @@ docker compose ps
 ```
 
 You should see 6 running services:
-- `app-db` (PostgreSQL 17 for CodeVerdict)
+- `app-db` (PostgreSQL 17 for Greenlight)
 - `app` (NestJS API + Vue SPA production bundle on port 3000)
 - `judge0-db` (PostgreSQL 16 for Judge0)
 - `judge0-redis` (Redis 7.2 job queue)
@@ -152,11 +152,11 @@ sudo apt install nginx certbot python3-certbot-nginx -y
 ```
 
 ### 2. Configure Nginx Virtual Host
-Create `/etc/nginx/sites-available/codeverdict.conf`:
+Create `/etc/nginx/sites-available/greenlight.conf`:
 
 ```nginx
 server {
-    server_name codeverdict.yourdomain.com;
+    server_name greenlight.yourdomain.com;
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -175,14 +175,14 @@ server {
 
 Enable site & restart Nginx:
 ```bash
-sudo ln -s /etc/nginx/sites-available/codeverdict.conf /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/greenlight.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
 ### 3. Issue SSL Certificate via Let's Encrypt
 ```bash
-sudo certbot --nginx -d codeverdict.yourdomain.com
+sudo certbot --nginx -d greenlight.yourdomain.com
 ```
 
 ---
@@ -197,7 +197,7 @@ docker compose exec -T app-db psql -U sanchit.sood -d gl_code_platform < exam-pr
 ```
 
 ### 2. Bootstrap Initial Admin User
-Open your browser at `https://codeverdict.yourdomain.com` and register your admin account using the `ADMIN_SETUP_KEY` defined in your `.env`.
+Open your browser at `https://greenlight.yourdomain.com` and register your admin account using the `ADMIN_SETUP_KEY` defined in your `.env`.
 
 ---
 
@@ -207,7 +207,7 @@ Open your browser at `https://codeverdict.yourdomain.com` and register your admi
 Add a cron job (`crontab -e`):
 
 ```cron
-0 2 * * * docker compose -f ~/CodeVerdict/docker-compose.yml exec -T app-db pg_dump -U sanchit.sood gl_code_platform | gzip > /backups/codeverdict_$(date +\%F).sql.gz
+0 2 * * * docker compose -f ~/CodeVerdict/docker-compose.yml exec -T app-db pg_dump -U sanchit.sood gl_code_platform | gzip > /backups/greenlight_$(date +\%F).sql.gz
 ```
 
 ### 2. View Logs
@@ -221,7 +221,7 @@ docker compose logs -f app
 
 ---
 
-## 🔄 Updating CodeVerdict
+## 🔄 Updating Greenlight
 To deploy new updates in production:
 
 ```bash

@@ -1,6 +1,6 @@
 # Load Tests
 
-k6 load-test suite for the CodeVerdict MCQ student flow.
+k6 load-test suite for the Greenlight MCQ student flow.
 
 ## Quick Start (Local)
 

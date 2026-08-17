@@ -1,6 +1,6 @@
 {
-  "name": "CodeVerdict",
-  "short_name": "CodeVerdict",
+  "name": "Greenlight",
+  "short_name": "Greenlight",
   "description": "Open-source coding exam platform with live ICPC-scored leaderboards, Monaco editor, and Judge0 code execution.",
   "start_url": "/",
   "display": "browser",

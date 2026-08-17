@@ -1,7 +1,7 @@
-# ✨ CodeVerdict - Open-Source Coding Exam Platform
+# ✨ Greenlight - Open-Source Coding Exam Platform
 
 <p align="center">
-  <img src="assets/banner.png" alt="CodeVerdict Banner" width="100%" />
+  <img src="assets/banner.png" alt="Greenlight Banner" width="100%" />
 </p>
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/YzG0Rg?referralCode=6wo8jP&utm_medium=integration&utm_source=template&utm_campaign=generic)
@@ -13,18 +13,18 @@
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-AGPL--3.0-blue)
 
-**Self-host your own coding exam platform** with live leaderboards, ICPC scoring, and instant code execution. CodeVerdict is a production-grade, open-source online coding examination platform built with NestJS, Vue 3, and PostgreSQL. Students solve programming problems in a Monaco-powered editor, get instant multi-test-case feedback via a self-hosted Judge0 executor, and compete on a real-time ICPC-scored leaderboard. Administrators create and manage exams, problems, and test cases through a dedicated panel.
+**Self-host your own coding exam platform** with live leaderboards, ICPC scoring, and instant code execution. Greenlight is a production-grade, open-source online coding examination platform built with NestJS, Vue 3, and PostgreSQL. Students solve programming problems in a Monaco-powered editor, get instant multi-test-case feedback via a self-hosted Judge0 executor, and compete on a real-time ICPC-scored leaderboard. Administrators create and manage exams, problems, and test cases through a dedicated panel.
 
 **🚀 Battle-tested in production:** 90,000+ requests handled in a 2-hour exam window with just 2 replicas - 99.99% success rate (9 failures out of 90,200 requests). 120+ concurrent users taking exams simultaneously.
 
 Fully open-source (AGPL-3.0) and white-label ready - customize branding (logo, app name, colors, copyright) via environment variables. No code changes needed.
 
-> **Open-source alternative to HackerRank, CodeSignal, HackerEarth, LeetCode, Codility, TestDome, CoderPad, CodeChef, and Codeforces.** CodeVerdict gives you full control - self-host on your own infrastructure, own your data, white-label everything, and pay nothing.
+> **Open-source alternative to HackerRank, CodeSignal, HackerEarth, LeetCode, Codility, TestDome, CoderPad, CodeChef, and Codeforces.** Greenlight gives you full control - self-host on your own infrastructure, own your data, white-label everything, and pay nothing.
 
 ## Preview
 
 <p align="center">
-  <img src="assets/preview.png" alt="CodeVerdict - Student Portal" width="100%" />
+  <img src="assets/preview.png" alt="Greenlight - Student Portal" width="100%" />
 </p>
 
 > **Student Portal** - Landing page once an exam is configured and live. Students see the contest details, rules, and timing at a glance. Hit **Enter Contest** to register via the API and jump straight into the coding environment.
@@ -32,7 +32,7 @@ Fully open-source (AGPL-3.0) and white-label ready - customize branding (logo, a
 ### Admin Panel - Exam Management
 
 <p align="center">
-  <img src="assets/create_exam_code_verdict.gif" alt="CodeVerdict - Create Exam" width="100%" />
+  <img src="assets/create_exam_code_verdict.gif" alt="Greenlight - Create Exam" width="100%" />
 </p>
 
 > **Create & Manage Exams** - Admin dashboard showing all exams with status (Active/Ended), duration, and quick actions. Create new exams, assign problems, view the leaderboard, duplicate existing exams, or delete them - all from one place.
@@ -40,7 +40,7 @@ Fully open-source (AGPL-3.0) and white-label ready - customize branding (logo, a
 ### Admin Panel - Problem Bank
 
 <p align="center">
-  <img src="assets/create_problem_code_verdict.gif" alt="CodeVerdict - Problem Management" width="100%" />
+  <img src="assets/create_problem_code_verdict.gif" alt="Greenlight - Problem Management" width="100%" />
 </p>
 
 > **Problem Bank** - Browse, search, and manage all problems across difficulty levels (Easy, Medium, Hard). Each problem shows time/memory limits, max score, and test case count. Add new problems or edit existing ones with the built-in editor.
@@ -48,7 +48,7 @@ Fully open-source (AGPL-3.0) and white-label ready - customize branding (logo, a
 ### Student Portal - Multi-Exam View
 
 <p align="center">
-  <img src="assets/multi_exam_user_preview_code_verdict.gif" alt="CodeVerdict - Multi Exam Student View" width="100%" />
+  <img src="assets/multi_exam_user_preview_code_verdict.gif" alt="Greenlight - Multi Exam Student View" width="100%" />
 </p>
 
 > **Exam Selector** - When multiple exams are running simultaneously, students see all available contests on the landing page. Pick an exam, view its schedule and rules, and enter when the window is open.
@@ -194,7 +194,7 @@ Railway provisions the app and PostgreSQL automatically. Set `JWT_SECRET`, `ADMI
 ## Production Build
 
 ```bash
-docker build -t codeverdict:latest .
+docker build -t greenlight:latest .
 ```
 
 Multi-stage Dockerfile: builds Vue SPA (with Brotli pre-compression) → compiles NestJS → copies both into a minimal `node:22-alpine` image running as non-root.

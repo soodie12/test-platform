@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-**CodeVerdict** - open-source (AGPL-3.0) coding exam platform. NestJS 11 backend + Vue 3 frontend, served as a single container. Self-hosted Judge0 for code execution, ICPC-scored leaderboards, white-label branding via env vars.
+**Greenlight** - open-source (AGPL-3.0) coding exam platform. NestJS 11 backend + Vue 3 frontend, served as a single container. Self-hosted Judge0 for code execution, ICPC-scored leaderboards, white-label branding via env vars.
 
 - **Repo:** ATOAPaymentsLimited/CodeVerdict
 - **License:** AGPL-3.0 (not MIT)
-- **Name:** CodeVerdict (default in `client/src/config/brand.ts` and `server/src/config/env.ts`)
+- **Name:** Greenlight (default in `client/src/config/brand.ts` and `server/src/config/env.ts`)
 
 ## Commands
 
@@ -85,7 +85,7 @@ Multi-stage Dockerfile: client → server → `node:22-alpine`. Serves Vue as st
 ## Branding
 
 All branding is env-var driven - no code changes needed:
-- `VITE_APP_NAME` / `APP_NAME` - app name (default: `CodeVerdict`)
+- `VITE_APP_NAME` / `APP_NAME` - app name (default: `Greenlight`)
 - `VITE_PRIMARY_COLOR` / `VITE_ACCENT_COLOR` - brand colors
 - `VITE_LOGO_PATH` - logo in `client/public/`
 - `VITE_COPYRIGHT_HOLDER` - footer copyright

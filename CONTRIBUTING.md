@@ -1,4 +1,4 @@
-# Contributing to CodeVerdict
+# Contributing to Greenlight
 
 Thanks for your interest in contributing! This guide will help you get started.
 
