@@ -29,7 +29,6 @@ export function useProctoring(
   const blockCopyPaste = ref(options.blockCopyPaste ?? true);
 
   let isArmed = false;
-  let lastViolationTime = 0;
 
   function checkFullscreenState() {
     if (!isArmed) return;
@@ -86,12 +85,15 @@ export function useProctoring(
     isFullscreen.value = true;
   }
 
+const lastGlobalViolationMap: Record<string, number> = {};
+
   function logViolation(type: ProctoringEventType, metadata?: Record<string, unknown>) {
     if (!isArmed) return;
 
     const now = Date.now();
-    if (now - lastViolationTime < 1500) return;
-    lastViolationTime = now;
+    const lastTypeTime = lastGlobalViolationMap[type] || 0;
+    if (now - lastTypeTime < 1500) return;
+    lastGlobalViolationMap[type] = now;
 
     violationCount.value++;
 

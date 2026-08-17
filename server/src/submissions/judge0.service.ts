@@ -246,23 +246,20 @@ export class Judge0Service {
   private fallbackExecute(
     submissions: Record<string, unknown>[],
   ): JudgeResult[] {
-    return submissions.map((sub, index) => {
-      const expected = sub.expected_output
-        ? this.fromBase64(sub.expected_output as string)
-        : 'Execution completed successfully.';
+    return submissions.map((_, index) => {
       return {
         index,
-        passed: true,
-        status: 'accepted',
-        statusId: 3,
-        stdout: expected,
-        stderr: null,
+        passed: false,
+        status: 'internal_error',
+        statusId: 13,
+        stdout: null,
+        stderr: 'Code execution service unavailable. Please try again.',
         compileOutput: null,
-        message: null,
-        time: 0.02,
-        wallTime: 0.02,
-        memory: 512,
-        exitCode: 0,
+        message: 'Judge0 execution service unavailable',
+        time: null,
+        wallTime: null,
+        memory: null,
+        exitCode: 1,
       };
     });
   }
