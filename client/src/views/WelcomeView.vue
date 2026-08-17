@@ -234,7 +234,7 @@ const rules = [
     </div>
 
     <!-- ── Header ─────────────────────────────────────────────────────── -->
-    <AppHeader>
+    <AppHeader @open-auth="showAuthModal = true">
       <template #nav>
         <button
           class="text-sm font-medium hover:text-primary transition-colors"
@@ -480,6 +480,7 @@ const rules = [
               <!-- CTA -->
               <div class="flex flex-wrap items-center gap-4">
                 <button
+                  v-if="viewingExam"
                   class="inline-flex items-center gap-3 h-14 px-8 bg-primary text-white text-base font-bold hover:bg-primary/90 shadow-[0_0_0_4px_rgb(var(--color-primary)/0.12)] hover:shadow-[0_0_32px_rgb(var(--color-primary)/0.50),_0_0_0_4px_rgb(var(--color-primary)/0.2)] active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:bg-primary cursor-pointer"
                   style="border-radius: 10px"
                   :disabled="entering || isUpcoming"
@@ -495,6 +496,17 @@ const rules = [
                         ? 'Contest Not Started'
                         : 'Enter Contest'
                   }}
+                </button>
+
+                <!-- Student Pre-login CTA -->
+                <button
+                  v-if="!authStore.isAuthenticated"
+                  class="inline-flex items-center gap-2 h-14 px-6 bg-slate-800 text-slate-200 border border-slate-700 text-base font-bold hover:bg-slate-700 hover:text-white transition-all cursor-pointer"
+                  style="border-radius: 10px"
+                  @click="showAuthModal = true"
+                >
+                  <span class="material-symbols-outlined text-[20px]">person_add</span>
+                  Student Login / Register
                 </button>
               </div>
 

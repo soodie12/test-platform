@@ -33,12 +33,25 @@ const isUpcoming = computed(() => {
   return new Date(exam.startTime) > new Date();
 });
 
+const emit = defineEmits<{
+  (e: 'open-auth'): void;
+}>();
+
 function enterContest() {
   if (!examStore.activeExam || isUpcoming.value) return;
+  if (!authStore.isAuthenticated) {
+    emit('open-auth');
+    return;
+  }
   void router.push({
     name: 'workspace',
     params: { id: examStore.activeExam.id },
   });
+}
+
+function handleLogout() {
+  authStore.logout();
+  void router.push('/');
 }
 
 const timerState = inject<{ isExpired: Ref<boolean> } | null>(
@@ -398,9 +411,9 @@ onUnmounted(() => {
         }}</span>
       </button>
 
-      <!-- User avatar (workspace) -->
+      <!-- User avatar & Logout -->
       <div
-        v-if="authStore.user && route.name === 'workspace'"
+        v-if="authStore.user"
         class="flex items-center gap-2 ml-1 pl-2 border-l border-slate-200 dark:border-white/[0.08]"
       >
         <div class="avatar">
@@ -411,7 +424,25 @@ onUnmounted(() => {
         >
           {{ authStore.user.firstName }}
         </span>
+        <button
+          class="flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-red-400 transition-colors ml-1 cursor-pointer"
+          title="Log out"
+          @click="handleLogout"
+        >
+          <span class="material-symbols-outlined text-[15px]">logout</span>
+          <span class="hidden sm:inline">Logout</span>
+        </button>
       </div>
+
+      <!-- Student Sign In button (when unauthenticated on home page) -->
+      <button
+        v-else-if="route.path === '/'"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 text-primary text-xs font-bold hover:bg-primary/10 transition-all cursor-pointer ml-1"
+        @click="emit('open-auth')"
+      >
+        <span class="material-symbols-outlined text-[15px]">login</span>
+        Sign In
+      </button>
 
       <!-- Mobile hamburger (home only) -->
       <slot name="mobile-toggle"></slot>

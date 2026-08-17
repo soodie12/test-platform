@@ -166,6 +166,20 @@ export function useProctoring(
     });
   }
 
+  function onMonacoPasteBlocked() {
+    if (!blockCopyPaste.value || !isArmed) return;
+    logViolation(ProctoringEventType.PASTE_ATTEMPT, {
+      reason: 'Attempted to paste content in editor',
+    });
+  }
+
+  function onMonacoCopyBlocked() {
+    if (!blockCopyPaste.value || !isArmed) return;
+    logViolation(ProctoringEventType.COPY_ATTEMPT, {
+      reason: 'Attempted to copy content from editor',
+    });
+  }
+
   onMounted(() => {
     document.addEventListener('fullscreenchange', checkFullscreenState);
     document.addEventListener('webkitfullscreenchange', checkFullscreenState);
@@ -175,6 +189,8 @@ export function useProctoring(
     document.addEventListener('paste', handlePaste, true);
     document.addEventListener('copy', handleCopy, true);
     document.addEventListener('cut', handleCopy, true);
+    window.addEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
+    window.addEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
 
     void requestFullscreen().then(() => {
       setTimeout(() => {
@@ -193,6 +209,8 @@ export function useProctoring(
     document.removeEventListener('paste', handlePaste, true);
     document.removeEventListener('copy', handleCopy, true);
     document.removeEventListener('cut', handleCopy, true);
+    window.removeEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
+    window.removeEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
   });
 
   return {

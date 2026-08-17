@@ -102,14 +102,14 @@ export interface AdminSubmission {
     exitCode: number | null;
   }> | null;
   submittedAt: string;
-  user?: { firstName: string; lastName: string; rollNumber: string };
+  user?: { id?: number; firstName: string; lastName: string; rollNumber: string };
   problem?: {
     id: number;
     title: string;
     questionType?: 'coding' | 'mcq';
     mcqOptions?: Array<{ id: number; text: string; isCorrect: boolean }>;
   };
-  exam?: { title: string };
+  exam?: { id?: number; title: string };
 }
 
 export interface AdminScore {

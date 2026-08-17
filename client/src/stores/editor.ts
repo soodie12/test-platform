@@ -92,8 +92,8 @@ export function toLangConfig(entry: {
   return { id: entry.id, name: entry.name, ...meta };
 }
 
-// Preferred default language ID: C (GCC 14.1.0)
-const DEFAULT_LANGUAGE_ID = 103;
+// Preferred default language ID: Python (3.8.1)
+const DEFAULT_LANGUAGE_ID = 71;
 
 // Fallback languages used before the API is called
 const FALLBACK_LANGUAGES: LanguageConfig[] = Object.entries(LANGUAGE_NAMES).map(

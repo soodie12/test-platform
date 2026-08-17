@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'imported'): void;
+  (e: 'imported', items?: Array<{ input: string; expectedOutput: string; isVisible: boolean }>): void;
 }>();
 
 const toastStore = useToastStore();
@@ -214,15 +214,23 @@ const mappedTestCases = computed(() => {
   });
 });
 
+
+
 async function confirmImport() {
-  const targetId = selectedProblemId.value ?? props.problemId;
-  if (!targetId) {
-    toastStore.add('error', 'Please select a target problem for the imported test cases.');
+  if (mappedTestCases.value.length === 0) {
+    toastStore.add('error', 'No valid test cases found in CSV to import.');
     return;
   }
 
-  if (mappedTestCases.value.length === 0) {
-    toastStore.add('error', 'No valid test cases found in CSV to import.');
+  const targetId = selectedProblemId.value ?? props.problemId;
+  if (!targetId) {
+    // Local mode (e.g. creating new problem in ProblemForm before saving)
+    toastStore.add(
+      'success',
+      `Loaded ${mappedTestCases.value.length} test cases into form!`,
+    );
+    emit('imported', mappedTestCases.value);
+    handleClose();
     return;
   }
 
@@ -233,7 +241,7 @@ async function confirmImport() {
       'success',
       `Successfully imported ${mappedTestCases.value.length} test cases!`,
     );
-    emit('imported');
+    emit('imported', mappedTestCases.value);
     handleClose();
   } catch (err: unknown) {
     const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;

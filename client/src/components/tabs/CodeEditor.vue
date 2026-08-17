@@ -48,12 +48,29 @@ const availableLanguages = computed(() => {
   if (!allowed || allowed.length === 0) return langs;
   const filtered = langs.filter((l) =>
     allowed.some((a) => {
-      if (typeof a === 'number' || !isNaN(Number(a))) {
-        return Number(a) === l.id;
+      const numA = Number(a);
+      if (!isNaN(numA)) {
+        return numA === l.id;
       }
-      const strA = String(a).toLowerCase();
-      const nameL = l.name.toLowerCase();
-      return nameL.includes(strA) || strA.includes(nameL);
+      const strA = String(a).trim().toLowerCase();
+      const nameL = l.name.trim().toLowerCase();
+
+      if (strA === 'c') {
+        return nameL.startsWith('c ') || nameL === 'c';
+      }
+      if (strA === 'cpp' || strA === 'c++') {
+        return nameL.includes('c++') || nameL.includes('cpp');
+      }
+      if (strA === 'python') {
+        return nameL.includes('python');
+      }
+      if (strA === 'java') {
+        return nameL.includes('java') && !nameL.includes('script');
+      }
+      if (strA === 'javascript' || strA === 'js') {
+        return nameL.includes('javascript') || nameL.includes('node');
+      }
+      return nameL === strA;
     }),
   );
   return filtered.length > 0 ? filtered : langs;

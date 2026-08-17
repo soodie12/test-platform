@@ -5,10 +5,12 @@ import {
   getSubmission,
   deleteSubmission,
   getProblem,
+  getProctoringLogs,
 } from '../../services/adminApi';
 import type { AdminSubmission } from '../../types/admin';
 import ConfirmModal from '../../components/shared/ConfirmModal.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
+import ProctoringModal from '../../components/admin/ProctoringModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,6 +20,8 @@ const error = ref('');
 const errorRaw = ref('');
 const showDeleteConfirm = ref(false);
 const deleting = ref(false);
+const showProctoringModal = ref(false);
+const candidateViolationsCount = ref<number | null>(null);
 const problem = ref<{
   questionType?: 'coding' | 'mcq';
   questionImageData?: string | null;
@@ -55,11 +59,15 @@ onMounted(async () => {
         // non-critical
       }
     }
-    // Auto-expand failing rows (coding only)
-    if (submission.value?.testResults) {
-      submission.value.testResults.forEach((t, i) => {
-        if (!t.passed) expandedRows.value.add(i);
-      });
+    // Fetch candidate proctoring details
+    if (submission.value?.examId && submission.value?.userId) {
+      try {
+        const logs = await getProctoringLogs(submission.value.examId);
+        const userLogs = logs.filter((l) => l.userId === submission.value?.userId);
+        candidateViolationsCount.value = userLogs.length;
+      } catch {
+        /* ignore */
+      }
     }
   } catch (err: unknown) {
     const e = extractError(err);
@@ -196,6 +204,34 @@ function toggleRow(i: number) {
           <span class="text-sm text-slate-900 dark:text-white">{{
             submission.exam?.title ?? '-'
           }}</span>
+        </div>
+        <div
+          class="flex flex-col gap-1 px-3.5 py-2.5 bg-white dark:bg-surface-dark rounded-lg border border-slate-200 dark:border-white/[0.06]"
+        >
+          <span
+            class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold"
+            >Proctoring Violations</span
+          >
+          <div class="flex items-center justify-between">
+            <span
+              class="text-xs font-bold px-2 py-0.5 rounded-full"
+              :class="{
+                'bg-emerald-500/10 text-emerald-400': (candidateViolationsCount ?? 0) <= 1,
+                'bg-amber-500/10 text-amber-400': (candidateViolationsCount ?? 0) >= 2 && (candidateViolationsCount ?? 0) <= 3,
+                'bg-red-500/10 text-red-400': (candidateViolationsCount ?? 0) >= 4,
+              }"
+            >
+              {{ (candidateViolationsCount ?? 0) <= 1 ? 'Clean' : (candidateViolationsCount ?? 0) <= 3 ? 'Warning' : 'Flagged' }}
+              ({{ candidateViolationsCount ?? 0 }} events)
+            </span>
+            <button
+              v-if="submission.examId"
+              class="text-[11px] text-primary hover:underline font-semibold cursor-pointer"
+              @click="showProctoringModal = true"
+            >
+              View Audit →
+            </button>
+          </div>
         </div>
         <div
           class="flex flex-col gap-1 px-3.5 py-2.5 bg-white dark:bg-surface-dark rounded-lg border border-slate-200 dark:border-white/[0.06]"
@@ -523,6 +559,14 @@ function toggleRow(i: number) {
       :danger="true"
       @confirm="onDelete"
       @cancel="showDeleteConfirm = false"
+    />
+
+    <ProctoringModal
+      v-if="submission?.examId"
+      :show="showProctoringModal"
+      :exam-id="submission.examId"
+      :exam-title="submission.exam?.title"
+      @close="showProctoringModal = false"
     />
   </div>
 </template>

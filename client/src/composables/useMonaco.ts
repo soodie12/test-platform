@@ -119,8 +119,42 @@ export function useMonaco(
         wordWrap: 'off',
         smoothScrolling: true,
         cursorBlinking: 'smooth',
+        contextmenu: false,
       }),
     );
+
+    // Capture-phase event listeners to intercept copy/paste/cut inside Monaco
+    const handleDomPaste = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
+    };
+
+    const handleDomCopy = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
+    };
+
+    const domElem = containerRef.value;
+    domElem.addEventListener('paste', handleDomPaste, true);
+    domElem.addEventListener('copy', handleDomCopy, true);
+    domElem.addEventListener('cut', handleDomCopy, true);
+    domElem.addEventListener('contextmenu', (e) => e.preventDefault(), true);
+
+    // Intercept keyboard commands (Ctrl+V, Cmd+V, Ctrl+C, Cmd+C) in Monaco
+    editor.value.onKeyDown((e) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      if (isMod && (e.code === 'KeyV' || e.code === 'KeyC' || e.code === 'KeyX')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.code === 'KeyV') {
+          window.dispatchEvent(new CustomEvent('proctoring-paste-blocked'));
+        } else {
+          window.dispatchEvent(new CustomEvent('proctoring-copy-blocked'));
+        }
+      }
+    });
 
     // Monaco → Vue: user typed something.
     contentDisposable = editor.value.onDidChangeModelContent(() => {

@@ -44,6 +44,20 @@ function updateRow(key: string, field: keyof TestCaseRow, value: unknown) {
   );
   emit('update:modelValue', next);
 }
+
+function onImportedTestCases(items?: Array<{ input: string; expectedOutput: string; isVisible: boolean }>) {
+  showCsvModal.value = false;
+  if (!items || items.length === 0) return;
+  const currentCount = props.modelValue.length;
+  const newRows: TestCaseRow[] = items.map((item, idx) => ({
+    _key: `tc_${Date.now()}_${keyCounter++}`,
+    input: item.input,
+    expectedOutput: item.expectedOutput,
+    isVisible: item.isVisible ?? false,
+    displayOrder: currentCount + idx,
+  }));
+  emit('update:modelValue', [...props.modelValue, ...newRows]);
+}
 </script>
 
 <template>
@@ -174,7 +188,7 @@ function updateRow(key: string, field: keyof TestCaseRow, value: unknown) {
       :show="showCsvModal"
       :problem-id="props.problemId"
       @close="showCsvModal = false"
-      @imported="showCsvModal = false"
+      @imported="onImportedTestCases"
     />
   </div>
 </template>

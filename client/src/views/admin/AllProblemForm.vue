@@ -59,16 +59,11 @@ let keyCounter = 0;
 const referenceSolutionCode = ref('');
 const referenceSolutionLanguageId = ref<string>('');
 const refSolutionLangOptions: SelectOption[] = [
-  { value: '113', label: 'Python (113)' },
-  { value: '109', label: 'Python 3.13.2 (109)' },
-  { value: '105', label: 'C++ (105)' },
-  { value: '54', label: 'C++ GCC 9.2.0 (54)' },
-  { value: '103', label: 'C (103)' },
-  { value: '50', label: 'C GCC 9.2.0 (50)' },
-  { value: '91', label: 'Java (91)' },
-  { value: '62', label: 'Java OpenJDK 13.0.1 (62)' },
-  { value: '102', label: 'JavaScript (102)' },
-  { value: '97', label: 'JavaScript Node.js 20.17.0 (97)' },
+  { value: '71', label: 'Python 3 (71)' },
+  { value: '54', label: 'C++ (54)' },
+  { value: '50', label: 'C (50)' },
+  { value: '62', label: 'Java (62)' },
+  { value: '63', label: 'JavaScript (63)' },
 ];
 
 // ── MCQ fields ────────────────────────────────────────────────────────────────
