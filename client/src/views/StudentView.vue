@@ -385,10 +385,12 @@ const { onMouseDown: onBottomDrag } = useResizable('horizontal', (delta) => {
 
                 <button
                   v-if="uiStore.sidebarCollapsed"
-                  class="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-9 z-10 bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-white/[0.06] border-l-0 rounded-r text-slate-400 dark:text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04] cursor-pointer text-xs flex items-center justify-center p-0 transition-colors"
+                  class="absolute left-0 top-1/2 -translate-y-1/2 z-20 flex items-center gap-1 px-2.5 py-2 bg-slate-900 text-white text-xs font-bold rounded-r-lg shadow-xl border border-l-0 border-slate-700 hover:bg-primary transition-all cursor-pointer"
+                  title="Show Question & Problems Panel"
                   @click="uiStore.setSidebarCollapsed(false)"
                 >
-                  &#8250;
+                  <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                  <span class="hidden sm:inline font-semibold">Question</span>
                 </button>
               </template>
 

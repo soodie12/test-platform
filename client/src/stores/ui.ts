@@ -72,6 +72,10 @@ export const useUiStore = defineStore('ui', () => {
     sidebarCollapsed.value = val;
   }
 
+  function setEditorExpanded(val: boolean) {
+    editorExpanded.value = val;
+  }
+
   function toggleEditorExpanded() {
     editorExpanded.value = !editorExpanded.value;
   }
@@ -110,6 +114,7 @@ export const useUiStore = defineStore('ui', () => {
     setSidebarWidth,
     setBottomPanelHeight,
     setSidebarCollapsed,
+    setEditorExpanded,
     toggleEditorExpanded,
     dismissCoachmarks,
     showCoachmarks,

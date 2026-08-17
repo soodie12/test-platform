@@ -86,6 +86,15 @@ function resetCode() {
   editorStore.resetCode();
 }
 
+function showQuestionPanel() {
+  if (uiStore.editorExpanded) {
+    uiStore.setEditorExpanded(false);
+  }
+  if (uiStore.sidebarCollapsed) {
+    uiStore.setSidebarCollapsed(false);
+  }
+}
+
 const copied = ref(false);
 async function copyCode() {
   try {
@@ -229,6 +238,16 @@ const langStyle = computed(() => {
 
       <!-- Right: save status + actions + shortcut -->
       <div class="flex items-center gap-1 flex-shrink-0">
+        <!-- Show Question Panel button -->
+        <button
+          v-if="uiStore.editorExpanded || uiStore.sidebarCollapsed"
+          class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-all cursor-pointer mr-1"
+          title="Show Question & Problems Panel"
+          @click="showQuestionPanel"
+        >
+          <span class="material-symbols-outlined text-[15px]">vertical_split</span>
+          <span>Show Question</span>
+        </button>
         <!-- Autosave status -->
         <Transition name="fade">
           <span
