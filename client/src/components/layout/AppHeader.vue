@@ -11,6 +11,7 @@ import { brand } from '../../config/brand';
 import Timer from '../shared/Timer.vue';
 import HelpModal from '../shared/HelpModal.vue';
 import ConfirmModal from '../shared/ConfirmModal.vue';
+import api from '../../services/api';
 
 const router = useRouter();
 const route = useRoute();
@@ -21,8 +22,12 @@ const editorStore = useEditorStore();
 const runSubmit = useRunSubmitStore();
 const examStore = useExamStore();
 
-function goHome() {
-  void router.push('/');
+async function goHome() {
+  if (route.name === 'workspace') {
+    await handleExitExam();
+  } else {
+    void router.push('/');
+  }
 }
 
 const isUpcoming = computed(() => {
@@ -81,6 +86,19 @@ async function handleExitExam() {
     }
   } catch {
     /* ignore */
+  }
+  const examId = examStore.activeExam?.id ?? Number(route.params.id);
+  if (examId && !isNaN(examId)) {
+    try {
+      await api.post(`/exams/${examId}/exit`, { reason: 'MANUAL_EXIT' });
+    } catch (e) {
+      console.warn('Failed to record exam exit', e);
+    }
+    if (examStore.examStatus) {
+      examStore.examStatus.hasExited = true;
+    } else {
+      examStore.examStatus = { hasExited: true } as any;
+    }
   }
   router.push('/');
 }

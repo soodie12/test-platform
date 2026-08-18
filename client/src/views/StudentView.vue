@@ -129,7 +129,8 @@ watch(isExpired, async (expired) => {
         /* ignore */
       }
       try {
-        const examId = examStore.activeExam?.id;
+        const routeExamId = Number(route.params.id);
+        const examId = examStore.activeExam?.id ?? (isNaN(routeExamId) ? undefined : routeExamId);
         if (examId) {
           await api.post(`/exams/${examId}/exit`, { reason: 'TIME_EXPIRED' });
         }

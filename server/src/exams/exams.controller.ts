@@ -114,9 +114,9 @@ export class ExamsController {
   @ApiResponse({ status: 404, description: 'Exam not found' })
   async getStatus(
     @Param('id', ParseIntPipe) id: number,
-    @GetUser('id') userId?: number,
+    @GetUser() user?: User,
   ) {
-    return this.examsService.getStatus(id, userId);
+    return this.examsService.getStatus(id, user?.id);
   }
 
   @Get(':examId/my-progress')
@@ -150,9 +150,9 @@ export class ExamsController {
   @ApiOperation({ summary: 'Mark student as exited from exam' })
   async exitExam(
     @Param('id', ParseIntPipe) id: number,
-    @GetUser('id') userId: number,
+    @GetUser() user: User,
     @Body('reason') reason?: string,
   ) {
-    return this.examsService.exitExam(userId, id, reason);
+    return this.examsService.exitExam(user.id, id, reason);
   }
 }

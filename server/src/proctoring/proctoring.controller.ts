@@ -51,9 +51,9 @@ export class ProctoringController {
   @ApiOperation({ summary: 'Get current user violation count for an exam' })
   async getMyViolationCount(
     @Param('examId', ParseIntPipe) examId: number,
-    @GetUser('id') userId: number,
+    @GetUser() user: User,
   ): Promise<{ count: number }> {
-    const count = await this.proctoringService.getViolationCount(examId, userId);
+    const count = await this.proctoringService.getViolationCount(examId, user.id);
     return { count };
   }
 }
