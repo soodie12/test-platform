@@ -10,7 +10,10 @@ import {
   setAccommodation,
   deleteAccommodation,
   listUsers,
+  listEnrollments,
+  resetCandidateExit,
   type ExamAccommodationEntry,
+  type ExamEnrollmentEntry,
 } from '../../services/adminApi';
 import { getExamStatus } from '../../types/admin';
 import type { ExamWithProblems, AdminUser } from '../../types/admin';
@@ -46,6 +49,7 @@ const duplicating = ref(false);
 
 const accomExam = ref<ExamWithProblems | null>(null);
 const accommodations = ref<ExamAccommodationEntry[]>([]);
+const enrollments = ref<ExamEnrollmentEntry[]>([]);
 const userOptions = ref<AdminUser[]>([]);
 const accomUserId = ref<number | null>(null);
 const accomExtraMinutes = ref<number>(15);
@@ -59,16 +63,32 @@ async function openAccommodations(exam: ExamWithProblems) {
   loadingAccom.value = true;
   accomError.value = '';
   try {
-    const [accList, uRes] = await Promise.all([
+    const [accList, uRes, enrList] = await Promise.all([
       listAccommodations(exam.id),
       listUsers({ limit: 100 }),
+      listEnrollments(exam.id),
     ]);
     accommodations.value = accList;
     userOptions.value = uRes.data;
+    enrollments.value = enrList;
   } catch {
-    accomError.value = 'Failed to load accommodations.';
+    accomError.value = 'Failed to load accommodations & enrollments.';
   } finally {
     loadingAccom.value = false;
+  }
+}
+
+async function onResetExit(userId: number) {
+  if (!accomExam.value) return;
+  try {
+    await resetCandidateExit(accomExam.value.id, userId);
+    const enr = enrollments.value.find((e) => e.userId === userId);
+    if (enr) {
+      enr.hasExited = false;
+      enr.exitReason = undefined;
+    }
+  } catch {
+    accomError.value = 'Failed to reset candidate exit status.';
   }
 }
 
@@ -551,6 +571,45 @@ function statusLabel(exam: ExamWithProblems) {
                   <span class="font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded text-xs">+{{ a.extraMinutes }}m</span>
                   <button class="text-slate-400 hover:text-rose-400 transition-colors" title="Delete extra time" @click="onDeleteAccommodation(a.id)">
                     <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Candidate Exit Status Management -->
+          <div class="mb-4 border-t border-slate-200 dark:border-white/[0.06] pt-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Candidate Exit / Re-entry Status</h4>
+            <div v-if="!enrollments.length" class="text-xs text-slate-500 py-2 text-center border border-dashed border-slate-200 dark:border-white/[0.06] rounded-lg">
+              No students enrolled in this exam yet.
+            </div>
+            <div v-else class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              <div
+                v-for="e in enrollments"
+                :key="e.id"
+                class="flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs"
+              >
+                <div>
+                  <span class="font-semibold text-slate-900 dark:text-white">
+                    {{ e.user?.firstName }} {{ e.user?.lastName }}
+                  </span>
+                  <span class="font-mono text-slate-400 ml-1">({{ e.user?.rollNumber || e.user?.email }})</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                    :class="e.hasExited ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'"
+                  >
+                    {{ e.hasExited ? `Exited (${e.exitReason || 'Closed'})` : 'Active' }}
+                  </span>
+                  <button
+                    v-if="e.hasExited"
+                    class="px-2 py-0.5 rounded bg-primary/20 hover:bg-primary/30 text-primary text-[11px] font-semibold transition-colors flex items-center gap-1"
+                    title="Reset exit status and re-enable exam access"
+                    @click="onResetExit(e.userId)"
+                  >
+                    <span class="material-symbols-outlined text-[13px]">lock_reset</span>
+                    Allow Re-entry
                   </button>
                 </div>
               </div>

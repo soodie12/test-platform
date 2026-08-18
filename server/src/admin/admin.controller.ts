@@ -153,6 +153,21 @@ export class AdminController {
     return this.adminService.deleteExamAccommodation(id);
   }
 
+  @Get('exams/:id/enrollments')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async listExamEnrollments(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.listExamEnrollments(id);
+  }
+
+  @Post('exams/:id/users/:userId/reset-exit')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async resetCandidateExit(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.adminService.resetCandidateExit(id, userId);
+  }
+
   // --- Problems ---
 
   @Get('problems/:id')

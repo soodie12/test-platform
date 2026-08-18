@@ -52,4 +52,8 @@ export class ProctoringService {
     }
     return result;
   }
+
+  async getViolationCount(examId: number, userId: number): Promise<number> {
+    return this.proctoringRepo.count({ where: { examId, userId } });
+  }
 }

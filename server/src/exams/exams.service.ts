@@ -52,6 +52,7 @@ export class ExamsService {
     const exam = await this.getById(examId);
     let extraMinutes = 0;
     let startedAt: Date | null = null;
+    let enrollment: ExamEnrollment | null = null;
 
     if (userId) {
       const accom = await this.accommodationRepo.findOne({
@@ -61,7 +62,7 @@ export class ExamsService {
         extraMinutes = accom.extraMinutes;
       }
 
-      let enrollment = await this.enrollmentRepo.findOne({
+      enrollment = await this.enrollmentRepo.findOne({
         where: { examId, userId },
       });
 
@@ -102,7 +103,31 @@ export class ExamsService {
       startedAt: effectiveStart,
       durationMinutes: exam.durationMinutes,
       serverTime: new Date(),
+      hasExited: enrollment?.hasExited ?? false,
     };
+  }
+
+  async exitExam(userId: number, examId: number, reason?: string) {
+    let enrollment = await this.enrollmentRepo.findOne({
+      where: { userId, examId },
+    });
+
+    if (!enrollment) {
+      enrollment = this.enrollmentRepo.create({
+        userId,
+        examId,
+        enrolledAt: new Date(),
+        startedAt: new Date(),
+        hasExited: true,
+        exitReason: reason || 'MANUAL_EXIT',
+      });
+    } else {
+      enrollment.hasExited = true;
+      enrollment.exitReason = reason || 'MANUAL_EXIT';
+    }
+
+    await this.enrollmentRepo.save(enrollment);
+    return { exited: true };
   }
 
   async getMyProgress(userId: number, examId: number) {

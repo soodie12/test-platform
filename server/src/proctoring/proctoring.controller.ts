@@ -44,4 +44,16 @@ export class ProctoringController {
   ): Promise<Record<number, number>> {
     return this.proctoringService.getViolationCountsByExam(examId);
   }
+
+  @Get('exam/:examId/my-count')
+  @Auth()
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user violation count for an exam' })
+  async getMyViolationCount(
+    @Param('examId', ParseIntPipe) examId: number,
+    @GetUser('id') userId: number,
+  ): Promise<{ count: number }> {
+    const count = await this.proctoringService.getViolationCount(examId, userId);
+    return { count };
+  }
 }

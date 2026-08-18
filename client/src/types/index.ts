@@ -127,6 +127,7 @@ export interface ExamStatus {
   startedAt?: string;
   durationMinutes?: number;
   isActive?: boolean;
+  hasExited?: boolean;
 }
 
 export interface ApiResponse {

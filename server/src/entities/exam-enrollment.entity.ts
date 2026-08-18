@@ -18,6 +18,12 @@ export class ExamEnrollment extends BaseEntity {
   @Column({ type: 'timestamptz', nullable: true })
   startedAt?: Date | null;
 
+  @Column({ type: 'boolean', default: false })
+  hasExited: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  exitReason?: string | null;
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 

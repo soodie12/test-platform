@@ -8,7 +8,7 @@ import {
   watch,
   nextTick,
 } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '../components/layout/AppHeader.vue';
 import WorkspaceSidebar from '../components/layout/WorkspaceSidebar.vue';
 import Sidebar from '../components/layout/Sidebar.vue';
@@ -35,6 +35,7 @@ import { useTimer } from '../composables/useTimer';
 import { useCelebration } from '../composables/useCelebration';
 
 const route = useRoute();
+const router = useRouter();
 const uiStore = useUiStore();
 const examStore = useExamStore();
 const runSubmit = useRunSubmitStore();
@@ -113,11 +114,57 @@ const celebration = useCelebration();
 const activeExamId = computed(() => examStore.activeExam?.id);
 const { isFullscreen, requestFullscreen, disarmProctoring } = useProctoring(activeExamId);
 
-watch(isExpired, (expired) => {
+const autoSubmitted = ref(false);
+
+watch(isExpired, async (expired) => {
   if (expired) {
     disarmProctoring();
+    if (!autoSubmitted.value) {
+      autoSubmitted.value = true;
+      try {
+        if (editorStore.activeProblem?.questionType === 'coding') {
+          await runSubmit.submit();
+        }
+      } catch {
+        /* ignore */
+      }
+      try {
+        const examId = examStore.activeExam?.id;
+        if (examId) {
+          await api.post(`/exams/${examId}/exit`, { reason: 'TIME_EXPIRED' });
+        }
+      } catch {
+        /* ignore */
+      }
+      if (examStore.examStatus) {
+        examStore.examStatus.hasExited = true;
+      }
+    }
   }
 });
+
+watch(
+  () => examStore.examStatus?.hasExited,
+  (exited) => {
+    if (exited) {
+      disarmProctoring();
+    }
+  },
+  { immediate: true },
+);
+
+async function handleExitToHome() {
+  disarmProctoring();
+  try {
+    const examId = examStore.activeExam?.id;
+    if (examId) {
+      await api.post(`/exams/${examId}/exit`, { reason: 'MANUAL_EXIT' });
+    }
+  } catch {
+    /* ignore */
+  }
+  router.push('/');
+}
 
 const loading = ref(true);
 
@@ -178,30 +225,22 @@ onMounted(async () => {
   const tourKey = `tourShown:${examId}`;
   if (examId && !localStorage.getItem(tourKey)) {
     await nextTick();
-    const { startTour } = await import('../composables/useTour');
-    void startTour();
-    localStorage.setItem(tourKey, '1');
+    setTimeout(async () => {
+      const { startTour } = await import('../composables/useTour');
+      void startTour();
+      localStorage.setItem(tourKey, 'true');
+    }, 1000);
   }
 });
 
-watch(isExpired, (expired) => {
-  if (expired) stopAutosave();
-});
-
 onUnmounted(() => {
-  celebration.stop();
+  stopAutosave();
 });
-
-watch(
-  () => examStore.myProgress?.allSolved,
-  (allSolved) => {
-    if (allSolved) celebration.start();
-  },
-);
 
 const examState = computed(() => {
   if (loading.value) return 'loading';
   if (!examStore.activeExam) return 'no-exam';
+  if (examStore.examStatus?.hasExited) return 'exited';
   if (examStore.myProgress?.allSolved) return 'completed';
   if (isExpired.value) return 'ended';
   return 'active';
@@ -308,24 +347,27 @@ const { onMouseDown: onBottomDrag } = useResizable('horizontal', (delta) => {
       </button>
     </div>
 
-    <!-- Exam ended (timer expired) -->
+    <!-- Exam exited or ended (timer expired) -->
     <div
-      v-else-if="examState === 'ended'"
+      v-else-if="examState === 'ended' || examState === 'exited'"
       class="flex flex-1 items-center justify-center state-screen-enter"
     >
-      <div class="text-center max-w-sm px-6">
-        <span class="material-symbols-outlined text-5xl text-primary mb-4 block"
-          >timer_off</span
+      <div class="text-center max-w-md px-6 py-8 rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-surface-dark shadow-2xl">
+        <span class="material-symbols-outlined text-6xl text-rose-400 mb-4 block"
+          >lock</span
         >
-        <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-          Exam has ended
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+          {{ examState === 'exited' ? 'Exam Exited' : 'Exam Time Expired' }}
         </h2>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">
-          Time's up - no more submissions are accepted.
+        <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          Your exam session has ended and your final submissions have been recorded. Re-entry into this exam is restricted unless granted by an administrator.
         </p>
-        <p class="text-sm text-slate-500 dark:text-slate-400">
-          Your submissions have been recorded. Results coming soon.
-        </p>
+        <button
+          class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-lg active:scale-95"
+          @click="handleExitToHome"
+        >
+          Exit Workspace
+        </button>
       </div>
     </div>
 

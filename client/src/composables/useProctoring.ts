@@ -229,6 +229,17 @@ const lastGlobalViolationMap: Record<string, number> = {};
     window.addEventListener('proctoring-paste-blocked', onMonacoPasteBlocked);
     window.addEventListener('proctoring-copy-blocked', onMonacoCopyBlocked);
 
+    if (examId.value) {
+      void api
+        .get<{ count: number }>(`/proctoring/exam/${examId.value}/my-count`)
+        .then(({ data }) => {
+          if (data && typeof data.count === 'number') {
+            violationCount.value = data.count;
+          }
+        })
+        .catch((err) => console.warn('[proctoring] Failed to fetch stored violation count', err));
+    }
+
     void requestFullscreen().then(() => {
       setTimeout(() => {
         isArmed = true;

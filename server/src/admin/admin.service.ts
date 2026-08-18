@@ -18,6 +18,7 @@ import { RunLog } from '../entities/run-log.entity';
 import { ProblemView } from '../entities/problem-view.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ExamAccommodation } from '../entities/exam-accommodation.entity';
+import { ExamEnrollment } from '../entities/exam-enrollment.entity';
 import { UsersService } from '../users/users.service';
 import { SubmissionsService } from '../submissions/submissions.service';
 import { ScoringService } from '../submissions/scoring.service';
@@ -50,6 +51,8 @@ export class AdminService {
     private readonly testCaseRepo: Repository<TestCase>,
     @InjectRepository(ExamAccommodation)
     private readonly accommodationRepo: Repository<ExamAccommodation>,
+    @InjectRepository(ExamEnrollment)
+    private readonly enrollmentRepo: Repository<ExamEnrollment>,
     private readonly usersService: UsersService,
     private readonly submissionsService: SubmissionsService,
     private readonly scoringService: ScoringService,
@@ -1072,5 +1075,24 @@ export class AdminService {
     if (!accom) throw new NotFoundException('Accommodation not found');
     await this.accommodationRepo.remove(accom);
     return { deleted: true };
+  }
+
+  async listExamEnrollments(examId: number) {
+    return this.enrollmentRepo.find({
+      where: { examId },
+      relations: ['user'],
+      order: { enrolledAt: 'DESC' },
+    });
+  }
+
+  async resetCandidateExit(examId: number, userId: number) {
+    const enrollment = await this.enrollmentRepo.findOne({
+      where: { examId, userId },
+    });
+    if (!enrollment) throw new NotFoundException('Candidate enrollment not found');
+    enrollment.hasExited = false;
+    enrollment.exitReason = null;
+    await this.enrollmentRepo.save(enrollment);
+    return { reset: true };
   }
 }

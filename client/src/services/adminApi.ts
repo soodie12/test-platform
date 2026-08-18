@@ -557,3 +557,31 @@ export async function getProctoringSummary(examId: number): Promise<Record<numbe
   const { data } = await api.get<Record<number, number>>(`/proctoring/exam/${examId}/summary`);
   return data;
 }
+
+// ─── Enrollments & Exit Reset ────────────────────────────────────────────────
+
+export interface ExamEnrollmentEntry {
+  id: number;
+  userId: number;
+  examId: number;
+  enrolledAt: string;
+  startedAt?: string;
+  hasExited: boolean;
+  exitReason?: string;
+  user?: {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    rollNumber?: string;
+  };
+}
+
+export async function listEnrollments(examId: number): Promise<ExamEnrollmentEntry[]> {
+  const { data } = await api.get<ExamEnrollmentEntry[]>(`/admin/exams/${examId}/enrollments`);
+  return data;
+}
+
+export async function resetCandidateExit(examId: number, userId: number): Promise<void> {
+  await api.post(`/admin/exams/${examId}/users/${userId}/reset-exit`);
+}

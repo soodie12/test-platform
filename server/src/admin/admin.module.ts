@@ -11,6 +11,7 @@ import { TestCase } from '../entities/test-case.entity';
 import { LeaderboardView } from '../entities/leaderboard-view.entity';
 import { ProblemToExam } from '../entities/problem-to-exam.entity';
 import { ExamAccommodation } from '../entities/exam-accommodation.entity';
+import { ExamEnrollment } from '../entities/exam-enrollment.entity';
 import { UsersModule } from '../users/users.module';
 import { SubmissionsModule } from '../submissions/submissions.module';
 import { ProblemsModule } from '../problems/problems.module';
@@ -26,6 +27,7 @@ import { AutosaveModule } from '../autosave/autosave.module';
       LeaderboardView,
       ProblemToExam,
       ExamAccommodation,
+      ExamEnrollment,
     ]),
     UsersModule,
     SubmissionsModule,

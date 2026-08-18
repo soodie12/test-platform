@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -142,5 +142,17 @@ export class ExamsController {
     @Param('examId', ParseIntPipe) examId: number,
   ) {
     return this.examsService.getMyProgress(user.id, examId);
+  }
+
+  @Post(':id/exit')
+  @Auth()
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Mark student as exited from exam' })
+  async exitExam(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser('id') userId: number,
+    @Body('reason') reason?: string,
+  ) {
+    return this.examsService.exitExam(userId, id, reason);
   }
 }
