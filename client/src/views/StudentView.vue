@@ -156,26 +156,52 @@ watch(
 
 async function handleExitToHome() {
   disarmProctoring();
-  try {
-    const routeExamId = Number(route.params.id);
-    const examId = examStore.activeExam?.id ?? (isNaN(routeExamId) ? undefined : routeExamId);
-    if (examId) {
+  stopExitPoll();
+  const routeExamId = Number(route.params.id);
+  const examId = examStore.activeExam?.id ?? (isNaN(routeExamId) ? undefined : routeExamId);
+  // Only call backend exit if currently active
+  if (examState.value === 'active' && examId) {
+    try {
       await api.post(`/exams/${examId}/exit`, { reason: 'MANUAL_EXIT' });
+    } catch {
+      /* ignore */
     }
-  } catch {
-    /* ignore */
-  }
-  if (examStore.examStatus) {
-    examStore.examStatus.hasExited = true;
-  } else {
-    examStore.examStatus = { hasExited: true } as any;
+    if (examStore.examStatus) {
+      examStore.examStatus.hasExited = true;
+    } else {
+      examStore.examStatus = { hasExited: true } as any;
+    }
   }
   router.push('/');
 }
 
 const loading = ref(true);
+let exitPollInterval: ReturnType<typeof setInterval> | null = null;
 
-onMounted(async () => {
+function stopExitPoll() {
+  if (exitPollInterval) {
+    clearInterval(exitPollInterval);
+    exitPollInterval = null;
+  }
+}
+
+function startExitPoll(examId: number) {
+  stopExitPoll();
+  exitPollInterval = setInterval(async () => {
+    try {
+      await examStore.fetchExamStatus(examId);
+      if (examStore.examStatus && !examStore.examStatus.hasExited) {
+        stopExitPoll();
+        await initWorkspace();
+      }
+    } catch {
+      /* ignore */
+    }
+  }, 4000);
+}
+
+async function initWorkspace() {
+  loading.value = true;
   uiStore.setActiveTab('code-editor');
   void editorStore.fetchLanguages();
   await examStore.fetchActiveExam();
@@ -192,18 +218,24 @@ onMounted(async () => {
     await examStore.fetchExamStatus(examId);
     if (examStore.examStatus?.hasExited) {
       loading.value = false;
+      startExitPoll(examId);
       return;
     }
+
+    stopExitPoll();
 
     try {
       try {
         await api.post(`/exams/${examId}/enroll`);
       } catch (err: any) {
-        if (err?.response?.status === 403) {
+        if (err?.response?.status === 403 && err?.response?.data?.message?.includes('exited')) {
           if (examStore.examStatus) {
             examStore.examStatus.hasExited = true;
+          } else {
+            examStore.examStatus = { hasExited: true } as any;
           }
           loading.value = false;
+          startExitPoll(examId);
           return;
         }
         /* already enrolled or other error */
@@ -233,13 +265,14 @@ onMounted(async () => {
         }
       }
     } catch (e: any) {
-      if (e?.response?.status === 403) {
+      if (e?.response?.status === 403 && e?.response?.data?.message?.includes('exited')) {
         if (examStore.examStatus) {
           examStore.examStatus.hasExited = true;
         } else {
           examStore.examStatus = { hasExited: true } as any;
         }
         loading.value = false;
+        startExitPoll(examId);
         return;
       }
       console.warn('[workspace] Auto fetch problems failed', e);
@@ -263,10 +296,15 @@ onMounted(async () => {
       localStorage.setItem(tourKey, 'true');
     }, 1000);
   }
+}
+
+onMounted(() => {
+  void initWorkspace();
 });
 
 onUnmounted(() => {
   stopAutosave();
+  stopExitPoll();
 });
 
 const examState = computed(() => {
@@ -394,12 +432,26 @@ const { onMouseDown: onBottomDrag } = useResizable('horizontal', (delta) => {
         <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
           Your exam session has ended and your final submissions have been recorded. Re-entry into this exam is restricted unless granted by an administrator.
         </p>
-        <button
-          class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-lg active:scale-95"
-          @click="handleExitToHome"
-        >
-          Exit Workspace
-        </button>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            v-if="examState === 'exited'"
+            class="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all cursor-pointer shadow-lg active:scale-95 flex items-center gap-2"
+            @click="initWorkspace"
+          >
+            <span class="material-symbols-outlined text-base">refresh</span>
+            Re-check & Resume
+          </button>
+          <button
+            class="px-6 py-2.5 rounded-xl border border-slate-200 dark:border-white/[0.1] text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-all cursor-pointer"
+            @click="handleExitToHome"
+          >
+            Back to Home
+          </button>
+        </div>
+        <div v-if="examState === 'exited'" class="mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>Auto-checking for administrator re-entry approval...</span>
+        </div>
       </div>
     </div>
 
