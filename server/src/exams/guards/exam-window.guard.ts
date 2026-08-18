@@ -34,8 +34,8 @@ export class ExamWindowGuard implements CanActivate {
     if (!exam.isActive) throw new ForbiddenException('Exam is not active');
 
     const now = new Date();
-    if (now < exam.startTime || now >= exam.endTime) {
-      throw new ForbiddenException('Exam window is not active');
+    if (exam.startTime && now < exam.startTime) {
+      throw new ForbiddenException('Exam has not started yet');
     }
 
     const { user } = request;
@@ -48,6 +48,12 @@ export class ExamWindowGuard implements CanActivate {
       throw new ForbiddenException(
         'Candidate has exited this exam and cannot re-enter unless granted by an administrator.',
       );
+    }
+
+    // Evaluate individual candidate allocated time (startedAt + durationMinutes + extraMinutes)
+    const status = await this.examsService.getStatus(exam.id, user.id);
+    if (status.examEndTime && now.getTime() > new Date(status.examEndTime).getTime()) {
+      throw new ForbiddenException('Your allocated exam time has expired');
     }
 
     request.exam = exam;
