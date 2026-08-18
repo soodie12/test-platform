@@ -26,8 +26,19 @@ export function useTimer() {
     try {
       const { data } = await api.get<ExamStatus>(`/exams/${id}/status`);
       drift = dayjs(data.serverTime).valueOf() - Date.now();
-      endTime = dayjs(data.examEndTime).valueOf();
+      const newEndTime = dayjs(data.examEndTime).valueOf();
+      endTime = newEndTime;
       examStore.examStatus = data;
+
+      // If time was extended while expired, unexpire and resume ticking
+      const now = Date.now() + drift;
+      if (newEndTime - now > 0 && isExpired.value) {
+        isExpired.value = false;
+        if (!tickInterval) {
+          tickInterval = setInterval(tick, 1000);
+        }
+      }
+      tick();
     } catch (e) {
       console.warn('[timer] Failed to sync time', e);
     }
@@ -44,7 +55,10 @@ export function useTimer() {
       isExpired.value = true;
       isWarning.value = false;
       isCritical.value = false;
-      stop();
+      if (tickInterval) {
+        clearInterval(tickInterval);
+        tickInterval = null;
+      }
       return;
     }
 
@@ -71,8 +85,11 @@ export function useTimer() {
       }
     }
     tick(); // show real countdown immediately instead of waiting 1s for first interval
-    tickInterval = setInterval(tick, 1000);
-    syncInterval = setInterval(() => sync(overrideExamId), 5 * 60 * 1000);
+    if (!tickInterval) {
+      tickInterval = setInterval(tick, 1000);
+    }
+    if (syncInterval) clearInterval(syncInterval);
+    syncInterval = setInterval(() => sync(overrideExamId), 15 * 1000);
   }
 
   function stop() {
