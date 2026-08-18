@@ -27,6 +27,7 @@ export function useTimer() {
       const { data } = await api.get<ExamStatus>(`/exams/${id}/status`);
       drift = dayjs(data.serverTime).valueOf() - Date.now();
       endTime = dayjs(data.examEndTime).valueOf();
+      examStore.examStatus = data;
     } catch (e) {
       console.warn('[timer] Failed to sync time', e);
     }
@@ -61,9 +62,13 @@ export function useTimer() {
   async function start() {
     await sync();
     // Fallback: if sync couldn't set endTime (unauthenticated or network error),
-    // derive it from the exam store so the timer never stays at '--:--:--'.
-    if (endTime === null && examStore.activeExam?.endTime) {
-      endTime = dayjs(examStore.activeExam.endTime).valueOf();
+    // derive candidate duration or examStatus end time.
+    if (endTime === null) {
+      if (examStore.examStatus?.examEndTime) {
+        endTime = dayjs(examStore.examStatus.examEndTime).valueOf();
+      } else if (examStore.activeExam?.durationMinutes) {
+        endTime = Date.now() + examStore.activeExam.durationMinutes * 60000;
+      }
     }
     tick(); // show real countdown immediately instead of waiting 1s for first interval
     tickInterval = setInterval(tick, 1000);

@@ -85,7 +85,7 @@ export class ExamsService {
 
       if (enrollment) {
         if (!enrollment.startedAt) {
-          enrollment.startedAt = new Date();
+          enrollment.startedAt = enrollment.enrolledAt || enrollment.createdAt || new Date();
           await this.enrollmentRepo.save(enrollment);
         }
         startedAt = enrollment.startedAt;
@@ -170,7 +170,11 @@ export class ExamsService {
       throw new BadRequestException('Exam has already ended');
     }
 
-    const enrollment = this.enrollmentRepo.create({ userId, examId });
+    const enrollment = this.enrollmentRepo.create({
+      userId,
+      examId,
+      startedAt: new Date(),
+    });
     try {
       return await this.enrollmentRepo.save(enrollment);
     } catch (err) {

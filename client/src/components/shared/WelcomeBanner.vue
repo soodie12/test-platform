@@ -36,15 +36,15 @@ function formatDate(iso: string) {
       </div>
       <div class="flex flex-col text-xs text-slate-500 dark:text-slate-400">
         <span class="text-[10px] uppercase tracking-wider text-slate-400 mb-px"
-          >Start</span
+          >Your Start</span
         >
-        <span>{{ formatDate(examStore.activeExam.startTime) }}</span>
+        <span>{{ formatDate(examStore.examStatus?.startedAt || examStore.activeExam.startTime) }}</span>
       </div>
       <div class="flex flex-col text-xs text-slate-500 dark:text-slate-400">
         <span class="text-[10px] uppercase tracking-wider text-slate-400 mb-px"
-          >End</span
+          >Your End</span
         >
-        <span>{{ formatDate(examStore.activeExam.endTime) }}</span>
+        <span>{{ formatDate(examStore.examStatus?.examEndTime || examStore.activeExam.endTime) }}</span>
       </div>
       <div class="flex flex-col text-xs text-slate-500 dark:text-slate-400">
         <span class="text-[10px] uppercase tracking-wider text-slate-400 mb-px"
