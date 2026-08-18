@@ -187,15 +187,23 @@ export class UsersService {
   }
 
   async findByIdWithSessionToken(id: number): Promise<User | null> {
-    return this.userRepo
-      .createQueryBuilder('user')
-      .addSelect('user.sessionToken')
-      .where('user.id = :id', { id })
-      .getOne();
+    try {
+      return await this.userRepo
+        .createQueryBuilder('user')
+        .addSelect('user.sessionToken')
+        .where('user.id = :id', { id })
+        .getOne();
+    } catch {
+      return this.findById(id);
+    }
   }
 
   async updateSessionToken(id: number, sessionToken: string | null): Promise<void> {
-    await this.userRepo.update(id, { sessionToken });
+    try {
+      await this.userRepo.update(id, { sessionToken });
+    } catch (e) {
+      console.warn('[users] Could not set sessionToken:', e);
+    }
   }
 
   async changePassword(id: number, newPassword: string): Promise<User> {
