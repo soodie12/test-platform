@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, inject, onMounted, onUnmounted, type Ref } from 'vue';
+import { computed, ref, inject, type Ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import { useTheme } from '../../composables/useTheme';
 import { useUiStore } from '../../stores/ui';
 import { useEditorStore } from '../../stores/editor';
 import { useRunSubmitStore } from '../../stores/runSubmit';
-import { useClipboardStore } from '../../stores/clipboard';
 import { useExamStore } from '../../stores/exam';
 import { brand } from '../../config/brand';
 import Timer from '../shared/Timer.vue';
@@ -20,7 +19,6 @@ const { theme, toggleTheme } = useTheme();
 const uiStore = useUiStore();
 const editorStore = useEditorStore();
 const runSubmit = useRunSubmitStore();
-const clipboardStore = useClipboardStore();
 const examStore = useExamStore();
 
 function goHome() {
@@ -68,8 +66,7 @@ const canRunSubmit = computed(
     !isExamExpired.value,
 );
 
-// ── Clipboard tracking ──────────────────────────────────────────────────────
-const clipboardOpen = ref(false);
+// ── Workspace actions ────────────────────────────────────────────────────────
 const showSubmitConfirm = ref(false);
 
 function confirmAndSubmit() {
@@ -87,60 +84,6 @@ async function handleExitExam() {
   }
   router.push('/');
 }
-const pastedIndex = ref<number | null>(null);
-
-function onCopy(e: ClipboardEvent) {
-  const text =
-    window.getSelection()?.toString() ?? e.clipboardData?.getData('text') ?? '';
-  if (text) clipboardStore.push(text);
-}
-
-async function pasteEntry(text: string, index: number) {
-  try {
-    await navigator.clipboard.writeText(text);
-    pastedIndex.value = index;
-    setTimeout(() => {
-      pastedIndex.value = null;
-    }, 1500);
-  } catch {
-    /* permission denied */
-  }
-}
-
-function formatTime(date: Date): string {
-  return new Date(date).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function truncate(text: string, len = 40): string {
-  return text.length > len ? text.slice(0, len) + '…' : text;
-}
-
-function onDocClick(e: MouseEvent) {
-  const el = document.getElementById('clipboard-dropdown-root');
-  if (el && !el.contains(e.target as Node)) clipboardOpen.value = false;
-}
-
-onMounted(() => {
-  // Restore locked entry into history after refresh
-  if (
-    clipboardStore.lockedText &&
-    !clipboardStore.history.find((e) => e.text === clipboardStore.lockedText)
-  ) {
-    clipboardStore.history.push({
-      text: clipboardStore.lockedText,
-      copiedAt: new Date(),
-    });
-  }
-  document.addEventListener('copy', onCopy);
-  document.addEventListener('mousedown', onDocClick);
-});
-onUnmounted(() => {
-  document.removeEventListener('copy', onCopy);
-  document.removeEventListener('mousedown', onDocClick);
-});
 </script>
 
 <template>
@@ -261,131 +204,7 @@ onUnmounted(() => {
         <div class="w-px h-5 bg-slate-200 dark:bg-white/[0.08] mx-0.5"></div>
       </div>
 
-      <!-- Clipboard history (workspace only) -->
-      <div
-        v-if="route.name === 'workspace'"
-        id="clipboard-dropdown-root"
-        data-tour="btn-clipboard"
-        class="relative"
-      >
-        <button
-          class="icon-btn"
-          :class="clipboardOpen ? 'icon-btn--active' : ''"
-          title="Clipboard history"
-          @click="clipboardOpen = !clipboardOpen"
-        >
-          <span class="material-symbols-outlined text-[18px]"
-            >content_paste</span
-          >
-          <span
-            v-if="clipboardStore.history.length"
-            class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-primary text-white text-[8px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-[#0d1117]"
-            >{{ clipboardStore.history.length }}</span
-          >
-        </button>
 
-        <!-- Dropdown -->
-        <Transition name="dropdown">
-          <div v-if="clipboardOpen" class="clipboard-dropdown">
-            <div
-              class="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-white/[0.06]"
-            >
-              <span
-                class="text-[10px] font-semibold uppercase tracking-widest text-slate-500"
-              >
-                Clipboard History
-              </span>
-              <button
-                v-if="clipboardStore.history.length"
-                class="text-[10px] text-slate-500 hover:text-red-400 transition-colors"
-                @click="clipboardStore.clear()"
-              >
-                Clear
-              </button>
-            </div>
-
-            <div
-              v-if="!clipboardStore.history.length"
-              class="px-3 py-5 text-center text-[11px] text-slate-500"
-            >
-              Nothing copied yet
-            </div>
-            <ul v-else class="py-1 max-h-64 overflow-y-auto">
-              <li
-                v-for="(entry, i) in clipboardStore.history"
-                :key="i"
-                class="group flex items-start gap-2 px-3 py-2 transition-colors"
-                :class="
-                  clipboardStore.lockedText === entry.text
-                    ? 'bg-amber-500/[0.06]'
-                    : 'hover:bg-white/[0.03]'
-                "
-              >
-                <span
-                  class="material-symbols-outlined text-[14px] mt-0.5 flex-shrink-0 cursor-pointer"
-                  :class="
-                    pastedIndex === i
-                      ? 'text-emerald-400'
-                      : 'text-slate-500 hover:text-primary'
-                  "
-                  @click="pasteEntry(entry.text, i)"
-                >
-                  {{ pastedIndex === i ? 'check' : 'content_copy' }}
-                </span>
-                <div
-                  class="flex-1 min-w-0 cursor-pointer"
-                  @click="pasteEntry(entry.text, i)"
-                >
-                  <p
-                    class="text-[11px] font-mono text-slate-700 dark:text-slate-300 truncate"
-                  >
-                    {{ truncate(entry.text) }}
-                  </p>
-                  <p class="text-[10px] text-slate-500 mt-0.5">
-                    {{ formatTime(entry.copiedAt) }}
-                    <span
-                      v-if="clipboardStore.lockedText === entry.text"
-                      class="ml-1 text-amber-400 font-semibold"
-                      >locked</span
-                    >
-                  </p>
-                </div>
-                <span
-                  class="material-symbols-outlined text-[14px] mt-0.5 flex-shrink-0 cursor-pointer transition-colors"
-                  :class="
-                    clipboardStore.lockedText === entry.text
-                      ? 'text-amber-400'
-                      : 'text-slate-600 hover:text-amber-400 opacity-0 group-hover:opacity-100'
-                  "
-                  :title="
-                    clipboardStore.lockedText === entry.text
-                      ? 'Unlock'
-                      : 'Lock (persists on refresh)'
-                  "
-                  @click.stop="clipboardStore.toggleLock(entry.text)"
-                >
-                  {{
-                    clipboardStore.lockedText === entry.text
-                      ? 'lock'
-                      : 'lock_open'
-                  }}
-                </span>
-              </li>
-            </ul>
-          </div>
-        </Transition>
-      </div>
-
-      <!-- Help button (workspace only) -->
-      <button
-        v-if="route.name === 'workspace'"
-        data-tour="btn-help"
-        class="icon-btn"
-        title="Help"
-        @click="uiStore.openHelpModal()"
-      >
-        <span class="material-symbols-outlined text-[18px]">help</span>
-      </button>
 
       <!-- Exit Exam button (workspace only) -->
       <button

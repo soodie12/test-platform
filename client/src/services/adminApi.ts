@@ -519,6 +519,40 @@ export async function getProctoringLogs(examId: number): Promise<ProctoringLogEn
   return data;
 }
 
+// ─── Accommodations ──────────────────────────────────────────────────────────
+
+export interface ExamAccommodationEntry {
+  id: number;
+  userId: number;
+  examId: number;
+  extraMinutes: number;
+  reason?: string;
+  user?: {
+    id: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    rollNumber?: string;
+  };
+}
+
+export async function listAccommodations(examId: number): Promise<ExamAccommodationEntry[]> {
+  const { data } = await api.get<ExamAccommodationEntry[]>(`/admin/exams/${examId}/accommodations`);
+  return data;
+}
+
+export async function setAccommodation(
+  examId: number,
+  payload: { userId: number; extraMinutes: number; reason?: string },
+): Promise<ExamAccommodationEntry> {
+  const { data } = await api.post<ExamAccommodationEntry>(`/admin/exams/${examId}/accommodations`, payload);
+  return data;
+}
+
+export async function deleteAccommodation(id: number): Promise<void> {
+  await api.delete(`/admin/accommodations/${id}`);
+}
+
 export async function getProctoringSummary(examId: number): Promise<Record<number, number>> {
   const { data } = await api.get<Record<number, number>>(`/proctoring/exam/${examId}/summary`);
   return data;

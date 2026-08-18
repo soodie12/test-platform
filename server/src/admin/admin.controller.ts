@@ -25,6 +25,7 @@ import { UpdateProblemDto } from './dto/update-problem.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeUserPasswordDto } from './dto/change-user-password.dto';
+import { CreateAccommodationDto } from './dto/create-accommodation.dto';
 import { CreateScoreDto } from './dto/create-score.dto';
 import { UpdateScoreDto } from './dto/update-score.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
@@ -129,6 +130,27 @@ export class AdminController {
       new Date(startTime),
       new Date(endTime),
     );
+  }
+
+  @Get('exams/:id/accommodations')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async listExamAccommodations(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.listExamAccommodations(id);
+  }
+
+  @Post('exams/:id/accommodations')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async setExamAccommodation(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateAccommodationDto,
+  ) {
+    return this.adminService.setExamAccommodation(id, dto);
+  }
+
+  @Delete('accommodations/:id')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async deleteExamAccommodation(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteExamAccommodation(id);
   }
 
   // --- Problems ---

@@ -28,6 +28,7 @@ import { AdminRegisterDto } from './dto/admin-register.dto';
 import { PaginationDto, PaginatedResponse } from '../common/dto/pagination.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import { CreateAccommodationDto } from './dto/create-accommodation.dto';
 import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
@@ -1036,5 +1037,40 @@ export class AdminService {
         neverAttempted: totalProblems - attempted,
       },
     };
+  }
+
+  async listExamAccommodations(examId: number) {
+    return this.accommodationRepo.find({
+      where: { examId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async setExamAccommodation(examId: number, dto: CreateAccommodationDto) {
+    let accom = await this.accommodationRepo.findOne({
+      where: { examId, userId: dto.userId },
+    });
+
+    if (accom) {
+      accom.extraMinutes = dto.extraMinutes;
+      if (dto.reason !== undefined) accom.reason = dto.reason;
+    } else {
+      accom = this.accommodationRepo.create({
+        examId,
+        userId: dto.userId,
+        extraMinutes: dto.extraMinutes,
+        reason: dto.reason,
+      });
+    }
+
+    return this.accommodationRepo.save(accom);
+  }
+
+  async deleteExamAccommodation(id: number) {
+    const accom = await this.accommodationRepo.findOne({ where: { id } });
+    if (!accom) throw new NotFoundException('Accommodation not found');
+    await this.accommodationRepo.remove(accom);
+    return { deleted: true };
   }
 }

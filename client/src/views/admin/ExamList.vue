@@ -6,9 +6,14 @@ import {
   deleteExam,
   duplicateExam,
   invalidateCachedExams,
+  listAccommodations,
+  setAccommodation,
+  deleteAccommodation,
+  listUsers,
+  type ExamAccommodationEntry,
 } from '../../services/adminApi';
 import { getExamStatus } from '../../types/admin';
-import type { ExamWithProblems } from '../../types/admin';
+import type { ExamWithProblems, AdminUser } from '../../types/admin';
 import ConfirmModal from '../../components/shared/ConfirmModal.vue';
 import ProctoringModal from '../../components/admin/ProctoringModal.vue';
 import TablePagination from '../../components/shared/TablePagination.vue';
@@ -38,6 +43,64 @@ const duplicateTitle = ref('');
 const duplicateStartTime = ref('');
 const duplicateEndTime = ref('');
 const duplicating = ref(false);
+
+const accomExam = ref<ExamWithProblems | null>(null);
+const accommodations = ref<ExamAccommodationEntry[]>([]);
+const userOptions = ref<AdminUser[]>([]);
+const accomUserId = ref<number | null>(null);
+const accomExtraMinutes = ref<number>(15);
+const accomReason = ref('');
+const loadingAccom = ref(false);
+const savingAccom = ref(false);
+const accomError = ref('');
+
+async function openAccommodations(exam: ExamWithProblems) {
+  accomExam.value = exam;
+  loadingAccom.value = true;
+  accomError.value = '';
+  try {
+    const [accList, uRes] = await Promise.all([
+      listAccommodations(exam.id),
+      listUsers({ limit: 100 }),
+    ]);
+    accommodations.value = accList;
+    userOptions.value = uRes.data;
+  } catch {
+    accomError.value = 'Failed to load accommodations.';
+  } finally {
+    loadingAccom.value = false;
+  }
+}
+
+async function onSaveAccommodation() {
+  if (!accomExam.value || !accomUserId.value || accomExtraMinutes.value < 1) return;
+  savingAccom.value = true;
+  accomError.value = '';
+  try {
+    await setAccommodation(accomExam.value.id, {
+      userId: accomUserId.value,
+      extraMinutes: accomExtraMinutes.value,
+      reason: accomReason.value.trim() || undefined,
+    });
+    accommodations.value = await listAccommodations(accomExam.value.id);
+    accomUserId.value = null;
+    accomReason.value = '';
+  } catch {
+    accomError.value = 'Failed to save extra time.';
+  } finally {
+    savingAccom.value = false;
+  }
+}
+
+async function onDeleteAccommodation(id: number) {
+  if (!accomExam.value) return;
+  try {
+    await deleteAccommodation(id);
+    accommodations.value = accommodations.value.filter((a) => a.id !== id);
+  } catch {
+    accomError.value = 'Failed to delete extra time.';
+  }
+}
 
 async function onDelete() {
   if (!confirmDelete.value) return;
@@ -256,6 +319,13 @@ function statusLabel(exam: ExamWithProblems) {
                       <span class="material-symbols-outlined text-[14px] text-emerald-400">security</span>
                       Proctoring
                     </RegalButton>
+                    <RegalButton
+                      variant="secondary"
+                      @click="openAccommodations(exam)"
+                    >
+                      <span class="material-symbols-outlined text-[14px] text-amber-400">more_time</span>
+                      Extra Time
+                    </RegalButton>
                     <RegalButton variant="accent" @click="openDuplicate(exam)">
                       Duplicate
                     </RegalButton>
@@ -438,5 +508,109 @@ function statusLabel(exam: ExamWithProblems) {
       :exam-title="proctoringExam.title"
       @close="proctoringExam = null"
     />
+
+    <!-- Accommodations / Extra Time Modal -->
+    <Teleport to="body">
+      <div
+        v-if="accomExam"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+      >
+        <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-white/[0.08] rounded-xl max-w-lg w-full p-5 shadow-2xl">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-400 text-lg">more_time</span>
+              Candidate Extra Time — {{ accomExam.title }}
+            </h3>
+            <button class="text-slate-400 hover:text-white text-lg leading-none" @click="accomExam = null">&times;</button>
+          </div>
+
+          <div v-if="accomError" class="mb-3 p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+            {{ accomError }}
+          </div>
+
+          <!-- Existing accommodations list -->
+          <div class="mb-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Assigned Time Extensions</h4>
+            <div v-if="loadingAccom" class="text-xs text-slate-500 py-3 text-center">Loading accommodations...</div>
+            <div v-else-if="!accommodations.length" class="text-xs text-slate-500 py-3 text-center border border-dashed border-slate-200 dark:border-white/[0.06] rounded-lg">
+              No individual extra time assigned yet.
+            </div>
+            <div v-else class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              <div
+                v-for="a in accommodations"
+                :key="a.id"
+                class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs"
+              >
+                <div>
+                  <div class="font-semibold text-slate-900 dark:text-white">
+                    {{ a.user?.firstName }} {{ a.user?.lastName }} <span class="font-mono text-slate-400">({{ a.user?.rollNumber || a.user?.email }})</span>
+                  </div>
+                  <div v-if="a.reason" class="text-[11px] text-slate-500 mt-0.5">{{ a.reason }}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded text-xs">+{{ a.extraMinutes }}m</span>
+                  <button class="text-slate-400 hover:text-rose-400 transition-colors" title="Delete extra time" @click="onDeleteAccommodation(a.id)">
+                    <span class="material-symbols-outlined text-base">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form to add new accommodation -->
+          <div class="border-t border-slate-200 dark:border-white/[0.06] pt-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Add Candidate Time Extension</h4>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-500 mb-1">Select Candidate</label>
+                <select
+                  v-model="accomUserId"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-xs outline-none focus:border-primary"
+                >
+                  <option :value="null" disabled>Choose a student...</option>
+                  <option v-for="u in userOptions" :key="u.id" :value="u.id">
+                    {{ u.firstName }} {{ u.lastName }} ({{ u.rollNumber || u.email }})
+                  </option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Extra Minutes</label>
+                  <input
+                    v-model.number="accomExtraMinutes"
+                    type="number"
+                    min="1"
+                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-xs outline-none focus:border-primary"
+                    placeholder="e.g. 15"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1">Reason (Optional)</label>
+                  <input
+                    v-model="accomReason"
+                    type="text"
+                    class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-xs outline-none focus:border-primary"
+                    placeholder="e.g. Accessibility accommodation"
+                  />
+                </div>
+              </div>
+
+              <div class="flex justify-end gap-2 pt-1">
+                <RegalButton size="sm" @click="accomExam = null">Close</RegalButton>
+                <RegalButton
+                  variant="primary"
+                  size="sm"
+                  :disabled="savingAccom || !accomUserId || accomExtraMinutes < 1"
+                  @click="onSaveAccommodation"
+                >
+                  {{ savingAccom ? 'Saving...' : 'Add Extra Time' }}
+                </RegalButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
