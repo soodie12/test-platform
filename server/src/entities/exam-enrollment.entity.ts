@@ -15,6 +15,9 @@ export class ExamEnrollment extends BaseEntity {
   @CreateDateColumn({ type: 'timestamptz' })
   enrolledAt: Date;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  startedAt?: Date | null;
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 

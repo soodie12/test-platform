@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { listUsers, deleteUser } from '../../services/adminApi';
+import { listUsers, deleteUser, changeUserPassword } from '../../services/adminApi';
 import type { AdminUser } from '../../types/admin';
 import ConfirmModal from '../../components/shared/ConfirmModal.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
@@ -42,6 +42,32 @@ function toggleQaFilter() {
 
 const confirmDelete = ref<AdminUser | null>(null);
 const deleting = ref(false);
+
+const passwordUser = ref<AdminUser | null>(null);
+const newPassword = ref('');
+const passwordError = ref('');
+const passwordSuccess = ref('');
+const updatingPassword = ref(false);
+
+async function onUpdatePassword() {
+  if (!passwordUser.value || !newPassword.value || newPassword.value.length < 6) {
+    passwordError.value = 'Password must be at least 6 characters.';
+    return;
+  }
+  updatingPassword.value = true;
+  passwordError.value = '';
+  try {
+    await changeUserPassword(passwordUser.value.id, newPassword.value);
+    passwordSuccess.value = `Password updated for ${passwordUser.value.email}`;
+    passwordUser.value = null;
+    newPassword.value = '';
+    setTimeout(() => { passwordSuccess.value = ''; }, 4000);
+  } catch {
+    passwordError.value = 'Failed to update password.';
+  } finally {
+    updatingPassword.value = false;
+  }
+}
 
 async function onDelete() {
   if (!confirmDelete.value) return;
@@ -227,6 +253,12 @@ function formatDate(iso: string) {
                     >
                       Edit
                     </RegalButton>
+                    <RegalButton
+                      variant="secondary"
+                      @click="passwordUser = u; newPassword = ''; passwordError = '';"
+                    >
+                      Password
+                    </RegalButton>
                     <RegalButton variant="danger" @click="confirmDelete = u">
                       Delete
                     </RegalButton>
@@ -307,5 +339,42 @@ function formatDate(iso: string) {
       @confirm="onDelete"
       @cancel="confirmDelete = null"
     />
+
+    <!-- Reset Password Modal -->
+    <div
+      v-if="passwordUser"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50"
+    >
+      <div class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-white/[0.08] rounded-xl max-w-md w-full p-5 shadow-2xl">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+          Change Password
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">
+          Updating password for <strong class="text-slate-700 dark:text-slate-300">{{ passwordUser.firstName }} {{ passwordUser.lastName }}</strong> ({{ passwordUser.email }}).
+        </p>
+
+        <div v-if="passwordError" class="mb-3 p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">
+          {{ passwordError }}
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-xs font-medium text-slate-500 mb-1">New Password</label>
+          <input
+            v-model="newPassword"
+            type="password"
+            class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+            placeholder="Min 6 characters..."
+            @keyup.enter="onUpdatePassword"
+          />
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <RegalButton @click="passwordUser = null; newPassword = '';">Cancel</RegalButton>
+          <RegalButton variant="primary" :disabled="updatingPassword" @click="onUpdatePassword">
+            {{ updatingPassword ? 'Saving...' : 'Update Password' }}
+          </RegalButton>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

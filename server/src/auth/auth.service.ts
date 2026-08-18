@@ -6,6 +6,7 @@ import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -49,7 +50,9 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return { accessToken: this.jwtService.sign({ sub: user.id }) };
+    const sessionToken = randomUUID();
+    await this.usersService.updateSessionToken(user.id, sessionToken);
+    return { accessToken: this.jwtService.sign({ sub: user.id, sid: sessionToken }) };
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
@@ -58,7 +61,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const token = this.jwtService.sign({ sub: user.id });
+    const sessionToken = randomUUID();
+    await this.usersService.updateSessionToken(user.id, sessionToken);
+    const token = this.jwtService.sign({ sub: user.id, sid: sessionToken });
 
     return {
       accessToken: token,
@@ -95,7 +100,9 @@ export class AuthService {
       user = await this.usersService.findByIdOrFail(reg.user.id);
     }
 
-    const token = this.jwtService.sign({ sub: user.id });
+    const sessionToken = randomUUID();
+    await this.usersService.updateSessionToken(user.id, sessionToken);
+    const token = this.jwtService.sign({ sub: user.id, sid: sessionToken });
 
     return {
       accessToken: token,

@@ -50,20 +50,57 @@ export class ExamsService {
 
   async getStatus(examId: number, userId?: number) {
     const exam = await this.getById(examId);
-    let examEndTime = exam.endTime;
+    let extraMinutes = 0;
+    let startedAt: Date | null = null;
 
     if (userId) {
       const accom = await this.accommodationRepo.findOne({
         where: { examId, userId },
       });
       if (accom && accom.extraMinutes > 0) {
-        examEndTime = new Date(exam.endTime.getTime() + accom.extraMinutes * 60000);
+        extraMinutes = accom.extraMinutes;
+      }
+
+      let enrollment = await this.enrollmentRepo.findOne({
+        where: { examId, userId },
+      });
+
+      if (!enrollment) {
+        // Auto-enroll if active exam
+        if (exam.isActive) {
+          try {
+            enrollment = this.enrollmentRepo.create({
+              userId,
+              examId,
+              startedAt: new Date(),
+            });
+            enrollment = await this.enrollmentRepo.save(enrollment);
+          } catch {
+            enrollment = await this.enrollmentRepo.findOne({
+              where: { examId, userId },
+            });
+          }
+        }
+      }
+
+      if (enrollment) {
+        if (!enrollment.startedAt) {
+          enrollment.startedAt = new Date();
+          await this.enrollmentRepo.save(enrollment);
+        }
+        startedAt = enrollment.startedAt;
       }
     }
 
+    const effectiveStart = startedAt || exam.startTime || new Date();
+    const totalDurationMs = (exam.durationMinutes + extraMinutes) * 60000;
+    const candidateEndTime = new Date(effectiveStart.getTime() + totalDurationMs);
+
     return {
       examId: exam.id,
-      examEndTime,
+      examEndTime: candidateEndTime,
+      startedAt: effectiveStart,
+      durationMinutes: exam.durationMinutes,
       serverTime: new Date(),
     };
   }

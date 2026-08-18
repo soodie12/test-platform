@@ -124,7 +124,9 @@ export interface ExamStatus {
   examId: number;
   examEndTime: string;
   serverTime: string;
-  isActive: boolean;
+  startedAt?: string;
+  durationMinutes?: number;
+  isActive?: boolean;
 }
 
 export interface ApiResponse {

@@ -228,7 +228,8 @@ const { onMouseDown: onBottomDrag } = useResizable('horizontal', (delta) => {
 
 <template>
   <div
-    class="flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark"
+    class="flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark select-none"
+    @contextmenu.prevent
   >
     <!-- Shared header -->
     <AppHeader />

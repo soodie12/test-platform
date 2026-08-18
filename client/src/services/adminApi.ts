@@ -286,6 +286,17 @@ export async function updateUser(
   return data;
 }
 
+export async function changeUserPassword(
+  id: number,
+  newPassword: string,
+): Promise<{ message: string }> {
+  const { data } = await api.patch<{ message: string }>(
+    `/admin/users/${id}/password`,
+    { newPassword },
+  );
+  return data;
+}
+
 export async function deleteUser(id: number): Promise<void> {
   await api.delete(`/admin/users/${id}`);
 }

@@ -7,6 +7,7 @@ import { SECRETS } from '../../config/env';
 
 export interface JwtPayload {
   sub: number;
+  sid?: string;
 }
 
 @Injectable()
@@ -20,9 +21,12 @@ export class JwtAuthStrategy extends PassportStrategy(JwtStrategy) {
   }
 
   async validate(payload: JwtPayload): Promise<User> {
-    const user = await this.usersService.findById(payload.sub);
+    const user = await this.usersService.findByIdWithSessionToken(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
+    }
+    if (payload.sid && user.sessionToken && payload.sid !== user.sessionToken) {
+      throw new UnauthorizedException('Session expired due to login on another device');
     }
     return user;
   }

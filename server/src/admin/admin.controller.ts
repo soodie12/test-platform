@@ -24,6 +24,7 @@ import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangeUserPasswordDto } from './dto/change-user-password.dto';
 import { CreateScoreDto } from './dto/create-score.dto';
 import { UpdateScoreDto } from './dto/update-score.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
@@ -317,6 +318,16 @@ export class AdminController {
   @Auth(AuthType.JWT, [AdminGuard])
   async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.delete(id);
+  }
+
+  @Patch('users/:id/password')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async changeUserPassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ChangeUserPasswordDto,
+  ) {
+    await this.usersService.changePassword(id, dto.newPassword);
+    return { message: 'Password updated successfully' };
   }
 
   // --- Submissions ---

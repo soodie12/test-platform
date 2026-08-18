@@ -166,6 +166,30 @@ const lastGlobalViolationMap: Record<string, number> = {};
 
   function handleKeyDown(e: KeyboardEvent) {
     if (!isArmed || authStore.user?.role === 'ADMIN') return;
+
+    const isMod = e.ctrlKey || e.metaKey;
+    const code = e.code;
+    const key = e.key ? e.key.toLowerCase() : '';
+
+    // Block F12 (DevTools)
+    if (code === 'F12' || key === 'f12') {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Block Ctrl+Shift+I / J / C (DevTools & Element Inspector), Ctrl+U (View Source)
+    // Block Mac Cmd+Option+I / J / U / C
+    if (
+      (isMod && e.shiftKey && (code === 'KeyI' || code === 'KeyJ' || code === 'KeyC')) ||
+      (isMod && (code === 'KeyU' || key === 'u')) ||
+      (e.metaKey && e.altKey && (code === 'KeyI' || code === 'KeyJ' || code === 'KeyU' || code === 'KeyC'))
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
     // Intercept Windows Clipboard History (Win+V / Ctrl+V with Alt) and Mac Paste Stack
     if (e.code === 'KeyV' && (e.altKey || e.metaKey || e.ctrlKey)) {
       if (e.altKey || e.shiftKey) {

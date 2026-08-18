@@ -20,6 +20,9 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', length: 255, select: false })
   password: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  sessionToken?: string | null;
+
   @Column({ type: 'varchar', length: 5, nullable: true })
   countryCode?: string;
 

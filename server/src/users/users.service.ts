@@ -185,4 +185,25 @@ export class UsersService {
     await this.userRepo.remove(user);
     return { deleted: true };
   }
+
+  async findByIdWithSessionToken(id: number): Promise<User | null> {
+    return this.userRepo
+      .createQueryBuilder('user')
+      .addSelect('user.sessionToken')
+      .where('user.id = :id', { id })
+      .getOne();
+  }
+
+  async updateSessionToken(id: number, sessionToken: string | null): Promise<void> {
+    await this.userRepo.update(id, { sessionToken });
+  }
+
+  async changePassword(id: number, newPassword: string): Promise<User> {
+    const user = await this.findByIdOrFail(id);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userRepo.update(id, { password: hashedPassword, sessionToken: null });
+    user.password = hashedPassword;
+    user.sessionToken = null;
+    return user;
+  }
 }
