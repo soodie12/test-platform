@@ -17,10 +17,10 @@ export function useTimer() {
   let tickInterval: ReturnType<typeof setInterval> | null = null;
   let syncInterval: ReturnType<typeof setInterval> | null = null;
 
-  async function sync() {
+  async function sync(overrideExamId?: number) {
     const authStore = useAuthStore();
     if (!authStore.isAuthenticated) return;
-    const id = examStore.activeExam?.id;
+    const id = overrideExamId ?? examStore.activeExam?.id ?? examStore.selectedExam?.id;
     if (!id) return;
 
     try {
@@ -59,8 +59,8 @@ export function useTimer() {
     isWarning.value = mins < 15 && !isCritical.value;
   }
 
-  async function start() {
-    await sync();
+  async function start(overrideExamId?: number) {
+    await sync(overrideExamId);
     // Fallback: if sync couldn't set endTime (unauthenticated or network error),
     // derive candidate duration or examStatus end time.
     if (endTime === null) {
@@ -72,7 +72,7 @@ export function useTimer() {
     }
     tick(); // show real countdown immediately instead of waiting 1s for first interval
     tickInterval = setInterval(tick, 1000);
-    syncInterval = setInterval(sync, 5 * 60 * 1000);
+    syncInterval = setInterval(() => sync(overrideExamId), 5 * 60 * 1000);
   }
 
   function stop() {

@@ -156,12 +156,18 @@ watch(
 async function handleExitToHome() {
   disarmProctoring();
   try {
-    const examId = examStore.activeExam?.id;
+    const routeExamId = Number(route.params.id);
+    const examId = examStore.activeExam?.id ?? (isNaN(routeExamId) ? undefined : routeExamId);
     if (examId) {
       await api.post(`/exams/${examId}/exit`, { reason: 'MANUAL_EXIT' });
     }
   } catch {
     /* ignore */
+  }
+  if (examStore.examStatus) {
+    examStore.examStatus.hasExited = true;
+  } else {
+    examStore.examStatus = { hasExited: true } as any;
   }
   router.push('/');
 }
@@ -180,9 +186,9 @@ onMounted(async () => {
     if (match) examStore.selectExam(match);
   }
 
-  const examId = examStore.activeExam?.id ?? routeExamId;
+  const examId = examStore.activeExam?.id ?? (isNaN(routeExamId) ? undefined : routeExamId);
   if (examId) {
-    await examStore.fetchExamStatus();
+    await examStore.fetchExamStatus(examId);
     if (examStore.examStatus?.hasExited) {
       loading.value = false;
       return;
@@ -237,12 +243,14 @@ onMounted(async () => {
       }
       console.warn('[workspace] Auto fetch problems failed', e);
     }
-  }
 
-  await examStore.fetchMyProgress();
-  loading.value = false;
-  void startAutosave();
-  void startTimer();
+    await examStore.fetchMyProgress(examId);
+    loading.value = false;
+    void startAutosave();
+    void startTimer(examId);
+  } else {
+    loading.value = false;
+  }
 
   // Auto-launch guided tour once per exam
   const tourKey = `tourShown:${examId}`;

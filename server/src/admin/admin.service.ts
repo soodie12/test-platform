@@ -1051,18 +1051,28 @@ export class AdminService {
   }
 
   async setExamAccommodation(examId: number, dto: CreateAccommodationDto) {
+    const userId = Number(dto.userId);
+    const extraMinutes = Number(dto.extraMinutes);
+
+    if (!userId || isNaN(userId)) {
+      throw new BadRequestException('Invalid user ID for accommodation');
+    }
+    if (!extraMinutes || isNaN(extraMinutes) || extraMinutes < 1) {
+      throw new BadRequestException('Extra minutes must be a positive integer');
+    }
+
     let accom = await this.accommodationRepo.findOne({
-      where: { examId, userId: dto.userId },
+      where: { examId, userId },
     });
 
     if (accom) {
-      accom.extraMinutes = dto.extraMinutes;
+      accom.extraMinutes = extraMinutes;
       if (dto.reason !== undefined) accom.reason = dto.reason;
     } else {
       accom = this.accommodationRepo.create({
         examId,
-        userId: dto.userId,
-        extraMinutes: dto.extraMinutes,
+        userId,
+        extraMinutes,
         reason: dto.reason,
       });
     }

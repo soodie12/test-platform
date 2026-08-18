@@ -118,13 +118,13 @@ async function onResetExit(userId: number) {
 }
 
 async function onSaveAccommodation() {
-  if (!accomExam.value || !accomUserId.value || accomExtraMinutes.value < 1) return;
+  if (!accomExam.value || !accomUserId.value || Number(accomExtraMinutes.value) < 1) return;
   savingAccom.value = true;
   accomError.value = '';
   try {
     await setAccommodation(accomExam.value.id, {
-      userId: accomUserId.value,
-      extraMinutes: accomExtraMinutes.value,
+      userId: Number(accomUserId.value),
+      extraMinutes: Number(accomExtraMinutes.value),
       reason: accomReason.value.trim() || undefined,
     });
     accommodations.value = await listAccommodations(accomExam.value.id);

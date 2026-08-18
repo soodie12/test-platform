@@ -80,8 +80,8 @@ export const useExamStore = defineStore('exam', () => {
     selectedExam.value = null;
   }
 
-  async function fetchExamStatus() {
-    const id = selectedExam.value?.id;
+  async function fetchExamStatus(examId?: number) {
+    const id = examId ?? selectedExam.value?.id;
     if (!id) return;
     try {
       const { data } = await api.get<ExamStatus>(`/exams/${id}/status`);
@@ -92,8 +92,8 @@ export const useExamStore = defineStore('exam', () => {
     }
   }
 
-  async function fetchMyProgress() {
-    const id = selectedExam.value?.id;
+  async function fetchMyProgress(examId?: number) {
+    const id = examId ?? selectedExam.value?.id;
     if (!id) return;
     try {
       const { data } = await api.get<MyProgress>(`/exams/${id}/my-progress`);
