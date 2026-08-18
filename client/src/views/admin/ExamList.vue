@@ -149,6 +149,44 @@ async function onDeleteAccommodation(id: number) {
   }
 }
 
+function getExtraMinutes(userId: number): number {
+  const match = accommodations.value.find((a) => a.userId === userId);
+  return match?.extraMinutes || 0;
+}
+
+function getCandidateTimeLeft(e: ExamEnrollmentEntry): string {
+  if (!accomExam.value) return '—';
+  const startRaw = e.startedAt || e.enrolledAt;
+  if (!startRaw) return 'Not started';
+
+  const start = new Date(startRaw).getTime();
+  const extraMin = getExtraMinutes(e.userId);
+  const totalDurationMs = (accomExam.value.durationMinutes + extraMin) * 60000;
+  const endTime = start + totalDurationMs;
+  const diffMs = endTime - Date.now();
+
+  if (diffMs <= 0) {
+    return 'Expired (0m left)';
+  }
+  const totalMins = Math.floor(diffMs / 60000);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0) return `${h}h ${m}m left`;
+  return `${m}m left`;
+}
+
+function getCandidateTimeSpent(e: ExamEnrollmentEntry): string {
+  const startRaw = e.startedAt || e.enrolledAt;
+  if (!startRaw) return '0m';
+  const start = new Date(startRaw).getTime();
+  const diffMs = Math.max(0, Date.now() - start);
+  const totalMins = Math.floor(diffMs / 60000);
+  const h = Math.floor(totalMins / 60);
+  const m = totalMins % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 async function onDelete() {
   if (!confirmDelete.value) return;
   const idToDelete = confirmDelete.value.id; // capture before await - ref may change
@@ -604,25 +642,55 @@ function statusLabel(exam: ExamWithProblems) {
             </div>
           </div>
 
-          <!-- Candidate Exit Status Management -->
+          <!-- Candidate Exit Status & Time Left Management -->
           <div class="mb-4 border-t border-slate-200 dark:border-white/[0.06] pt-3">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Candidate Exit / Re-entry Status</h4>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Enrolled Candidates ({{ enrollments.length }})
+              </h4>
+              <span class="text-[11px] text-slate-400">Exam Duration: {{ accomExam.durationMinutes }}m</span>
+            </div>
             <div v-if="!enrollments.length" class="text-xs text-slate-500 py-2 text-center border border-dashed border-slate-200 dark:border-white/[0.06] rounded-lg">
               No students enrolled in this exam yet.
             </div>
-            <div v-else class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <div v-else class="space-y-2 max-h-52 overflow-y-auto pr-1">
               <div
                 v-for="e in enrollments"
                 :key="e.id"
-                class="flex items-center justify-between p-2 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs"
+                class="p-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2"
               >
                 <div>
-                  <span class="font-semibold text-slate-900 dark:text-white">
-                    {{ e.user?.firstName }} {{ e.user?.lastName }}
-                  </span>
-                  <span class="font-mono text-slate-400 ml-1">({{ e.user?.rollNumber || e.user?.email }})</span>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="font-semibold text-slate-900 dark:text-white">
+                      {{ e.user?.firstName }} {{ e.user?.lastName }}
+                    </span>
+                    <span class="font-mono text-slate-400">({{ e.user?.rollNumber || e.user?.email }})</span>
+                    <span
+                      v-if="getExtraMinutes(e.userId)"
+                      class="font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded text-[10px]"
+                    >
+                      +{{ getExtraMinutes(e.userId) }}m extra
+                    </span>
+                  </div>
+                  <!-- Time Left & Time Spent -->
+                  <div class="flex items-center gap-2.5 text-[11px] text-slate-500 mt-1">
+                    <span class="flex items-center gap-1 text-primary font-medium">
+                      <span class="material-symbols-outlined text-[13px]">timer</span>
+                      <span>{{ getCandidateTimeLeft(e) }}</span>
+                    </span>
+                    <span>&bull;</span>
+                    <span>Spent: {{ getCandidateTimeSpent(e) }}</span>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                  <button
+                    v-if="!getExtraMinutes(e.userId)"
+                    class="px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-medium transition-colors cursor-pointer"
+                    title="Select this candidate below to grant extra time"
+                    @click="accomUserId = e.userId"
+                  >
+                    + Extra Time
+                  </button>
                   <span
                     class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                     :class="e.hasExited ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'"
@@ -631,7 +699,7 @@ function statusLabel(exam: ExamWithProblems) {
                   </span>
                   <button
                     v-if="e.hasExited"
-                    class="px-2 py-0.5 rounded bg-primary/20 hover:bg-primary/30 text-primary text-[11px] font-semibold transition-colors flex items-center gap-1"
+                    class="px-2 py-0.5 rounded bg-primary/20 hover:bg-primary/30 text-primary text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                     title="Reset exit status and re-enable exam access"
                     @click="onResetExit(e.userId)"
                   >
