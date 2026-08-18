@@ -182,12 +182,26 @@ onMounted(async () => {
 
   const examId = examStore.activeExam?.id ?? routeExamId;
   if (examId) {
+    await examStore.fetchExamStatus();
+    if (examStore.examStatus?.hasExited) {
+      loading.value = false;
+      return;
+    }
+
     try {
       try {
         await api.post(`/exams/${examId}/enroll`);
-      } catch {
-        /* already enrolled or error */
+      } catch (err: any) {
+        if (err?.response?.status === 403) {
+          if (examStore.examStatus) {
+            examStore.examStatus.hasExited = true;
+          }
+          loading.value = false;
+          return;
+        }
+        /* already enrolled or other error */
       }
+
       const { data: list } = await api.get<Problem[]>(
         `/exams/${examId}/problems`,
       );
@@ -211,7 +225,16 @@ onMounted(async () => {
           );
         }
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e?.response?.status === 403) {
+        if (examStore.examStatus) {
+          examStore.examStatus.hasExited = true;
+        } else {
+          examStore.examStatus = { hasExited: true } as any;
+        }
+        loading.value = false;
+        return;
+      }
       console.warn('[workspace] Auto fetch problems failed', e);
     }
   }

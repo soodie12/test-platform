@@ -39,9 +39,15 @@ export class ExamWindowGuard implements CanActivate {
     }
 
     const { user } = request;
-    const enrolled = await this.examsService.isEnrolled(user.id, exam.id);
-    if (!enrolled) {
+    const enrollment = await this.examsService.getEnrollment(user.id, exam.id);
+    if (!enrollment) {
       throw new ForbiddenException('You are not enrolled in this exam');
+    }
+
+    if (enrollment.hasExited) {
+      throw new ForbiddenException(
+        'Candidate has exited this exam and cannot re-enter unless granted by an administrator.',
+      );
     }
 
     request.exam = exam;

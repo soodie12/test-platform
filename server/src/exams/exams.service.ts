@@ -195,6 +195,18 @@ export class ExamsService {
       throw new BadRequestException('Exam has already ended');
     }
 
+    const existing = await this.enrollmentRepo.findOne({
+      where: { userId, examId },
+    });
+    if (existing) {
+      if (existing.hasExited) {
+        throw new ForbiddenException(
+          'Candidate has exited this exam and cannot re-enter unless granted by an administrator.',
+        );
+      }
+      throw new ConflictException('Already enrolled in this exam');
+    }
+
     const enrollment = this.enrollmentRepo.create({
       userId,
       examId,
@@ -211,6 +223,12 @@ export class ExamsService {
       }
       throw err;
     }
+  }
+
+  async getEnrollment(userId: number, examId: number): Promise<ExamEnrollment | null> {
+    return this.enrollmentRepo.findOne({
+      where: { userId, examId },
+    });
   }
 
   async isEnrolled(userId: number, examId: number): Promise<boolean> {

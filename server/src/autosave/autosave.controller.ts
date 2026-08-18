@@ -17,6 +17,8 @@ import {
 } from '@nestjs/swagger';
 import { AutosaveService } from './autosave.service';
 import { Auth } from '../common/decorators/auth.decorator';
+import { AuthType } from '../common/enums/auth-type.enum';
+import { ExamWindowGuard } from '../exams/guards/exam-window.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
 import { User } from '../entities/user.entity';
 import { SaveAutosaveDto } from './dto/save-autosave.dto';
@@ -25,11 +27,11 @@ import { SaveAutosaveDto } from './dto/save-autosave.dto';
 @ApiTags('Autosave')
 @ApiBearerAuth()
 @Controller('autosave')
-@Auth()
 export class AutosaveController {
   constructor(private readonly autosaveService: AutosaveService) {}
 
   @Post(':examId')
+  @Auth(AuthType.JWT, [ExamWindowGuard])
   @ApiOperation({
     summary: 'Save code state',
     description:
@@ -56,6 +58,7 @@ export class AutosaveController {
   }
 
   @Get(':examId')
+  @Auth(AuthType.JWT, [ExamWindowGuard])
   @ApiOperation({
     summary: 'Load saved code state',
     description:

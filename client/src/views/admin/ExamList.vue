@@ -62,17 +62,41 @@ async function openAccommodations(exam: ExamWithProblems) {
   accomExam.value = exam;
   loadingAccom.value = true;
   accomError.value = '';
+  accommodations.value = [];
+  enrollments.value = [];
+  userOptions.value = [];
   try {
-    const [accList, uRes, enrList] = await Promise.all([
+    const [accRes, uRes, enrRes] = await Promise.allSettled([
       listAccommodations(exam.id),
       listUsers({ limit: 100 }),
       listEnrollments(exam.id),
     ]);
-    accommodations.value = accList;
-    userOptions.value = uRes.data;
-    enrollments.value = enrList;
-  } catch {
-    accomError.value = 'Failed to load accommodations & enrollments.';
+
+    if (accRes.status === 'fulfilled') {
+      accommodations.value = accRes.value || [];
+    } else {
+      console.warn('[Accommodations] Failed to load accommodations:', accRes.reason);
+    }
+
+    if (uRes.status === 'fulfilled') {
+      userOptions.value = uRes.value?.data || [];
+    } else {
+      console.warn('[Accommodations] Failed to load user options:', uRes.reason);
+    }
+
+    if (enrRes.status === 'fulfilled') {
+      enrollments.value = enrRes.value || [];
+    } else {
+      console.warn('[Accommodations] Failed to load enrollments:', enrRes.reason);
+    }
+
+    if (accRes.status === 'rejected' && enrRes.status === 'rejected' && uRes.status === 'rejected') {
+      const err = (accRes as PromiseRejectedResult).reason || (enrRes as PromiseRejectedResult).reason;
+      accomError.value = err?.response?.data?.message || err?.message || 'Failed to load accommodations & enrollments.';
+    }
+  } catch (err: any) {
+    console.error('Failed to open accommodations:', err);
+    accomError.value = err?.response?.data?.message || err?.message || 'Failed to load accommodations & enrollments.';
   } finally {
     loadingAccom.value = false;
   }
@@ -87,8 +111,9 @@ async function onResetExit(userId: number) {
       enr.hasExited = false;
       enr.exitReason = undefined;
     }
-  } catch {
-    accomError.value = 'Failed to reset candidate exit status.';
+  } catch (err: any) {
+    console.error('Failed to reset candidate exit status:', err);
+    accomError.value = err?.response?.data?.message || err?.message || 'Failed to reset candidate exit status.';
   }
 }
 
@@ -105,8 +130,9 @@ async function onSaveAccommodation() {
     accommodations.value = await listAccommodations(accomExam.value.id);
     accomUserId.value = null;
     accomReason.value = '';
-  } catch {
-    accomError.value = 'Failed to save extra time.';
+  } catch (err: any) {
+    console.error('Failed to save extra time:', err);
+    accomError.value = err?.response?.data?.message || err?.message || 'Failed to save extra time.';
   } finally {
     savingAccom.value = false;
   }
@@ -117,8 +143,9 @@ async function onDeleteAccommodation(id: number) {
   try {
     await deleteAccommodation(id);
     accommodations.value = accommodations.value.filter((a) => a.id !== id);
-  } catch {
-    accomError.value = 'Failed to delete extra time.';
+  } catch (err: any) {
+    console.error('Failed to delete extra time:', err);
+    accomError.value = err?.response?.data?.message || err?.message || 'Failed to delete extra time.';
   }
 }
 
