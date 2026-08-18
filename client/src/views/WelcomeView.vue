@@ -461,7 +461,7 @@ const rules = [
                 <p
                   class="text-lg text-slate-600 dark:text-slate-400 max-w-lg leading-relaxed"
                 >
-                  Solve algorithmic problems in our modern code editor with instant testcase evaluation, ICPC scoring, and real-time leaderboards.
+                  Solve algorithmic problems in our modern code editor with instant testcase evaluation.
                 </p>
               </div>
 
@@ -786,8 +786,7 @@ const rules = [
         class="max-w-[1200px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2"
       >
         <span class="text-xs text-slate-400 dark:text-slate-600">
-          &copy; {{ new Date().getFullYear()
-          }}{{ brand.copyrightHolder ? ` ${brand.copyrightHolder}` : '' }}
+          &copy; {{ new Date().getFullYear() }} {{ brand.copyrightHolder || 'Greenlight' }}. All rights reserved.
         </span>
       </div>
     </footer>
