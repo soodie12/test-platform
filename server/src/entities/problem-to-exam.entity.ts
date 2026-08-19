@@ -5,7 +5,6 @@ import { Exam } from './exam.entity';
 
 @Entity('problem_to_exam')
 @Unique(['examId', 'problemId'])
-@Unique(['examId', 'displayOrder'])
 export class ProblemToExam extends BaseEntity {
   @Column()
   problemId: number;
