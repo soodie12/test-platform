@@ -1053,6 +1053,7 @@ export class AdminService {
   async setExamAccommodation(examId: number, dto: CreateAccommodationDto) {
     const userId = Number(dto.userId);
     const extraMinutes = Number(dto.extraMinutes);
+    const mode = dto.mode || 'add';
 
     if (!userId || isNaN(userId)) {
       throw new BadRequestException('Invalid user ID for accommodation');
@@ -1066,7 +1067,11 @@ export class AdminService {
     });
 
     if (accom) {
-      accom.extraMinutes = extraMinutes;
+      if (mode === 'add') {
+        accom.extraMinutes = (accom.extraMinutes || 0) + extraMinutes;
+      } else {
+        accom.extraMinutes = extraMinutes;
+      }
       if (dto.reason !== undefined) accom.reason = dto.reason;
     } else {
       accom = this.accommodationRepo.create({

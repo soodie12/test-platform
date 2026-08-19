@@ -1,4 +1,4 @@
-import { IsInt, Min, IsString, IsOptional } from 'class-validator';
+import { IsInt, Min, IsString, IsOptional, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateAccommodationDto {
@@ -14,4 +14,9 @@ export class CreateAccommodationDto {
   @IsString()
   @IsOptional()
   reason?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['add', 'set'])
+  mode?: 'add' | 'set';
 }

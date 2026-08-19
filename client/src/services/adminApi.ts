@@ -543,7 +543,7 @@ export async function listAccommodations(examId: number): Promise<ExamAccommodat
 
 export async function setAccommodation(
   examId: number,
-  payload: { userId: number; extraMinutes: number; reason?: string },
+  payload: { userId: number; extraMinutes: number; reason?: string; mode?: 'add' | 'set' },
 ): Promise<ExamAccommodationEntry> {
   const { data } = await api.post<ExamAccommodationEntry>(`/admin/exams/${examId}/accommodations`, payload);
   return data;

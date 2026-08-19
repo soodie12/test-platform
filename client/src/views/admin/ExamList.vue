@@ -126,15 +126,33 @@ async function onSaveAccommodation() {
       userId: Number(accomUserId.value),
       extraMinutes: Number(accomExtraMinutes.value),
       reason: accomReason.value.trim() || undefined,
+      mode: 'add',
     });
     accommodations.value = await listAccommodations(accomExam.value.id);
     accomUserId.value = null;
     accomReason.value = '';
+    accomExtraMinutes.value = 10;
   } catch (err: any) {
     console.error('Failed to save extra time:', err);
     accomError.value = err?.response?.data?.message || err?.message || 'Failed to save extra time.';
   } finally {
     savingAccom.value = false;
+  }
+}
+
+async function onQuickAddExtraMinutes(userId: number, minutes: number) {
+  if (!accomExam.value) return;
+  accomError.value = '';
+  try {
+    await setAccommodation(accomExam.value.id, {
+      userId,
+      extraMinutes: minutes,
+      mode: 'add',
+    });
+    accommodations.value = await listAccommodations(accomExam.value.id);
+  } catch (err: any) {
+    console.error('Failed to quick add extra time:', err);
+    accomError.value = err?.response?.data?.message || err?.message || 'Failed to add extra time.';
   }
 }
 
@@ -624,7 +642,7 @@ function statusLabel(exam: ExamWithProblems) {
               <div
                 v-for="a in accommodations"
                 :key="a.id"
-                class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs"
+                class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-background-dark text-xs gap-2"
               >
                 <div>
                   <div class="font-semibold text-slate-900 dark:text-white">
@@ -632,9 +650,32 @@ function statusLabel(exam: ExamWithProblems) {
                   </div>
                   <div v-if="a.reason" class="text-[11px] text-slate-500 mt-0.5">{{ a.reason }}</div>
                 </div>
-                <div class="flex items-center gap-3">
-                  <span class="font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded text-xs">+{{ a.extraMinutes }}m</span>
-                  <button class="text-slate-400 hover:text-rose-400 transition-colors" title="Delete extra time" @click="onDeleteAccommodation(a.id)">
+                <div class="flex items-center gap-2">
+                  <span class="font-mono font-bold text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded text-xs">+{{ a.extraMinutes }}m total</span>
+                  <div class="flex items-center gap-1">
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add 5 more minutes"
+                      @click="onQuickAddExtraMinutes(a.userId, 5)"
+                    >
+                      +5m
+                    </button>
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add 10 more minutes"
+                      @click="onQuickAddExtraMinutes(a.userId, 10)"
+                    >
+                      +10m
+                    </button>
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add 15 more minutes"
+                      @click="onQuickAddExtraMinutes(a.userId, 15)"
+                    >
+                      +15m
+                    </button>
+                  </div>
+                  <button class="text-slate-400 hover:text-rose-400 transition-colors ml-1" title="Delete extra time" @click="onDeleteAccommodation(a.id)">
                     <span class="material-symbols-outlined text-base">delete</span>
                   </button>
                 </div>
@@ -682,15 +723,32 @@ function statusLabel(exam: ExamWithProblems) {
                     <span>Spent: {{ getCandidateTimeSpent(e) }}</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    v-if="!getExtraMinutes(e.userId)"
-                    class="px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 text-[10px] font-medium transition-colors cursor-pointer"
-                    title="Select this candidate below to grant extra time"
-                    @click="accomUserId = e.userId"
-                  >
-                    + Extra Time
-                  </button>
+                <div class="flex items-center gap-2 self-end sm:self-center flex-wrap">
+                  <!-- Quick add buttons directly on candidate card -->
+                  <div class="flex items-center gap-1 bg-slate-200/50 dark:bg-white/[0.04] p-1 rounded-md">
+                    <span class="text-[9px] text-slate-400 font-semibold uppercase px-1">+Time:</span>
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add +5 minutes"
+                      @click="onQuickAddExtraMinutes(e.userId, 5)"
+                    >
+                      +5m
+                    </button>
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add +10 minutes"
+                      @click="onQuickAddExtraMinutes(e.userId, 10)"
+                    >
+                      +10m
+                    </button>
+                    <button
+                      class="px-1.5 py-0.5 rounded bg-primary/10 hover:bg-primary/20 text-primary text-[10px] font-bold transition-colors cursor-pointer"
+                      title="Add +15 minutes"
+                      @click="onQuickAddExtraMinutes(e.userId, 15)"
+                    >
+                      +15m
+                    </button>
+                  </div>
                   <span
                     class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                     :class="e.hasExited ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400'"
@@ -713,7 +771,12 @@ function statusLabel(exam: ExamWithProblems) {
 
           <!-- Form to add new accommodation -->
           <div class="border-t border-slate-200 dark:border-white/[0.06] pt-3">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Add Candidate Time Extension</h4>
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Add Extra Minutes</h4>
+              <span v-if="accomUserId && getExtraMinutes(accomUserId)" class="text-[11px] text-amber-500 font-medium">
+                Current: +{{ getExtraMinutes(accomUserId) }}m &rarr; New Total: +{{ getExtraMinutes(accomUserId) + (Number(accomExtraMinutes) || 0) }}m
+              </span>
+            </div>
             <div class="space-y-3">
               <div>
                 <label class="block text-xs font-medium text-slate-500 mb-1">Select Candidate</label>
@@ -728,15 +791,39 @@ function statusLabel(exam: ExamWithProblems) {
                 </select>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label class="block text-xs font-medium text-slate-500 mb-1">Extra Minutes</label>
+                  <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-medium text-slate-500">Minutes to Add (+m)</label>
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] hover:bg-primary/20 hover:text-primary transition-colors font-medium"
+                        @click="accomExtraMinutes = 5"
+                      >+5m</button>
+                      <button
+                        type="button"
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] hover:bg-primary/20 hover:text-primary transition-colors font-medium"
+                        @click="accomExtraMinutes = 10"
+                      >+10m</button>
+                      <button
+                        type="button"
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] hover:bg-primary/20 hover:text-primary transition-colors font-medium"
+                        @click="accomExtraMinutes = 15"
+                      >+15m</button>
+                      <button
+                        type="button"
+                        class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] hover:bg-primary/20 hover:text-primary transition-colors font-medium"
+                        @click="accomExtraMinutes = 30"
+                      >+30m</button>
+                    </div>
+                  </div>
                   <input
                     v-model.number="accomExtraMinutes"
                     type="number"
                     min="1"
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-xs outline-none focus:border-primary"
-                    placeholder="e.g. 15"
+                    placeholder="e.g. 10"
                   />
                 </div>
                 <div>
@@ -745,7 +832,7 @@ function statusLabel(exam: ExamWithProblems) {
                     v-model="accomReason"
                     type="text"
                     class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-background-dark text-slate-900 dark:text-white text-xs outline-none focus:border-primary"
-                    placeholder="e.g. Accessibility accommodation"
+                    placeholder="e.g. Network delay accommodation"
                   />
                 </div>
               </div>
@@ -755,10 +842,10 @@ function statusLabel(exam: ExamWithProblems) {
                 <RegalButton
                   variant="primary"
                   size="sm"
-                  :disabled="savingAccom || !accomUserId || accomExtraMinutes < 1"
+                  :disabled="savingAccom || !accomUserId || Number(accomExtraMinutes) < 1"
                   @click="onSaveAccommodation"
                 >
-                  {{ savingAccom ? 'Saving...' : 'Add Extra Time' }}
+                  {{ savingAccom ? 'Adding Time...' : '+ Add Extra Time' }}
                 </RegalButton>
               </div>
             </div>
