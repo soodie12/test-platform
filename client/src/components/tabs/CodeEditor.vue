@@ -82,10 +82,6 @@ function onLanguageChange(e: Event) {
   if (lang) editorStore.setLanguage(lang);
 }
 
-function resetCode() {
-  editorStore.resetCode();
-}
-
 function showQuestionPanel() {
   if (uiStore.editorExpanded) {
     uiStore.setEditorExpanded(false);
@@ -281,16 +277,6 @@ const langStyle = computed(() => {
             >
           </span>
         </Transition>
-
-        <!-- Reset -->
-        <button
-          class="toolbar-btn group"
-          title="Reset to starter"
-          @click="resetCode"
-        >
-          <span class="material-symbols-outlined text-[15px]">restart_alt</span>
-          <span class="toolbar-tip">Reset</span>
-        </button>
 
         <!-- Copy (Admin only) -->
         <button
