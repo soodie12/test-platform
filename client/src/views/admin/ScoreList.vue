@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { listAggregatedScores } from '../../services/adminApi';
+import { listAggregatedScores, listExams } from '../../services/adminApi';
 import type { AggregatedScore } from '../../types/admin';
 import TablePagination from '../../components/shared/TablePagination.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
@@ -20,6 +20,17 @@ const exams = ref<ExamOption[]>([]);
 const search = ref('');
 const examFilter = ref<number | ''>('');
 const qaFilterOnly = ref(false);
+
+onMounted(async () => {
+  try {
+    const res = await listExams({ limit: 100 });
+    if (res?.data) {
+      exams.value = res.data.map((e) => ({ id: e.id, title: e.title }));
+    }
+  } catch {
+    // fallback to dynamic population
+  }
+});
 
 function updateExamOptions(rows: AggregatedScore[]) {
   const map = new Map<number, ExamOption>();
