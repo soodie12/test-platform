@@ -195,6 +195,11 @@ function truncate(str: string, len = 50) {
                 <th
                   class="px-3.5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.06]"
                 >
+                  Points
+                </th>
+                <th
+                  class="px-3.5 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.06]"
+                >
                   Actions
                 </th>
               </tr>
@@ -247,6 +252,12 @@ function truncate(str: string, len = 50) {
                     "
                     >{{ tc.isVisible ? '✓' : '✗' }}</span
                   >
+                </td>
+                <td
+                  class="px-3.5 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-900 dark:text-slate-200 align-middle font-mono text-xs"
+                >
+                  <span v-if="tc.score" class="text-primary font-bold">{{ tc.score }} pts</span>
+                  <span v-else class="text-slate-400">0 pts</span>
                 </td>
                 <td
                   class="px-3.5 py-3 border-b border-slate-200 dark:border-white/[0.06] align-middle"

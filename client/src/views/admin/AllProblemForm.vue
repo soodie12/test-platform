@@ -172,6 +172,7 @@ onMounted(async () => {
           input: string;
           expectedOutput: string;
           isVisible?: boolean;
+          score?: number;
           displayOrder: number;
         }) => ({
           _key: `tc-${++keyCounter}`,
@@ -179,6 +180,7 @@ onMounted(async () => {
           input: tc.input,
           expectedOutput: tc.expectedOutput,
           isVisible: tc.isVisible ?? false,
+          score: tc.score ?? 0,
           displayOrder: tc.displayOrder,
         }),
       );
@@ -270,6 +272,7 @@ async function save() {
         input: tc.input,
         expectedOutput: tc.expectedOutput,
         isVisible: tc.isVisible,
+        score: Number(tc.score) || 0,
         displayOrder: tc.displayOrder ?? i,
       }));
       payload.referenceSolutionCode =

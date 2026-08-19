@@ -169,6 +169,7 @@ onMounted(async () => {
           input: string;
           expectedOutput: string;
           isVisible: boolean;
+          score?: number;
           displayOrder: number;
         }) => ({
           _key: makeKey(),
@@ -176,6 +177,7 @@ onMounted(async () => {
           input: tc.input,
           expectedOutput: tc.expectedOutput,
           isVisible: tc.isVisible,
+          score: tc.score ?? 0,
           displayOrder: tc.displayOrder,
         }),
       );
@@ -290,6 +292,7 @@ async function save() {
           input: tc.input,
           expectedOutput: tc.expectedOutput,
           isVisible: tc.isVisible,
+          score: Number(tc.score) || 0,
           displayOrder: i,
         })),
         referenceSolutionCode: referenceSolutionCode.value.trim() || null,

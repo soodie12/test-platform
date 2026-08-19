@@ -45,6 +45,7 @@ const form = ref({
   input: '',
   expectedOutput: '',
   isVisible: false,
+  score: 0,
   displayOrder: 0,
 });
 
@@ -59,6 +60,7 @@ onMounted(async () => {
         input: tc.input ?? '',
         expectedOutput: tc.expectedOutput ?? '',
         isVisible: tc.isVisible ?? false,
+        score: tc.score ?? 0,
         displayOrder: tc.displayOrder ?? 0,
       };
       readonlyInfo.value = {
@@ -87,6 +89,7 @@ async function save() {
         input: form.value.input,
         expectedOutput: form.value.expectedOutput,
         isVisible: form.value.isVisible,
+        score: Number(form.value.score) || 0,
         displayOrder: form.value.displayOrder,
       } as UpdateTestCasePayload);
     } else {
@@ -95,6 +98,7 @@ async function save() {
         input: form.value.input,
         expectedOutput: form.value.expectedOutput,
         isVisible: form.value.isVisible,
+        score: Number(form.value.score) || 0,
         displayOrder: form.value.displayOrder,
       } as CreateTestCasePayload);
     }
@@ -208,6 +212,20 @@ function extractError(err: unknown): { message: string; raw: string } {
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3.5">
+        <div class="flex-1 flex flex-col gap-1.5">
+          <label
+            class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
+            >Score / Points (pts)</label
+          >
+          <input
+            v-model.number="form.score"
+            type="number"
+            min="0"
+            step="any"
+            placeholder="0"
+            class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"
+          />
+        </div>
         <div class="flex-1 flex flex-col gap-1.5">
           <label
             class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
