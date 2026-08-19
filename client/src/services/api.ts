@@ -141,6 +141,28 @@ export async function getSubmissionById(
   return data;
 }
 
+export async function saveMcqAnswer(payload: {
+  examId: number;
+  problemId: number;
+  selectedOptionIds: string[];
+}): Promise<{ saved: boolean; problemId: number; selectedOptionIds: string[]; isAnswered: boolean }> {
+  const { examId, problemId, selectedOptionIds } = payload;
+  const { data } = await api.post(
+    `/exams/${examId}/mcq-section/answer`,
+    { problemId, selectedOptionIds },
+  );
+  return data;
+}
+
+export async function fetchMyMcqAnswers(
+  examId: number,
+): Promise<{ answers: Record<number, string[]> }> {
+  const { data } = await api.get<{ answers: Record<number, string[]> }>(
+    `/exams/${examId}/mcq-section/my-answers`,
+  );
+  return data;
+}
+
 export async function submitMcqSection(payload: {
   examId: number;
   answers: Array<{ problemId: number; selectedOptionIds: string[] }>;

@@ -27,6 +27,8 @@ export class SubmissionsService {
   constructor(
     @InjectRepository(Submission)
     private readonly submissionRepo: Repository<Submission>,
+    @InjectRepository(Score)
+    private readonly scoreRepo: Repository<Score>,
     @InjectRepository(ProblemToExam)
     private readonly problemToExamRepo: Repository<ProblemToExam>,
     private readonly judge0Service: Judge0Service,
@@ -306,6 +308,181 @@ export class SubmissionsService {
     });
 
     return { submitted: true, totalScore: results };
+  }
+
+  async saveMcqAnswer(
+    userId: number,
+    examId: number,
+    problemId: number,
+    selectedOptionIds: string[],
+  ): Promise<{
+    saved: boolean;
+    problemId: number;
+    selectedOptionIds: string[];
+    isAnswered: boolean;
+    verdict: string;
+    score: number;
+  }> {
+    // 1. Verify problem belongs to this exam
+    const mapping = await this.problemToExamRepo.findOne({
+      where: { examId, problemId },
+      relations: ['problem'],
+    });
+    if (!mapping || !mapping.problem || mapping.problem.questionType !== 'mcq') {
+      throw new BadRequestException('MCQ problem not found for this exam');
+    }
+
+    const problem = mapping.problem;
+    const options = problem.mcqOptions ?? [];
+    const validOptionIds = new Set(options.map((o) => o.id));
+
+    // Validate provided option IDs
+    for (const optId of selectedOptionIds) {
+      if (!validOptionIds.has(optId)) {
+        throw new BadRequestException(
+          `Invalid option ID: ${optId} for problem ${problem.id}`,
+        );
+      }
+    }
+
+    const submittedAt = new Date();
+
+    if (selectedOptionIds.length === 0) {
+      // Unanswered / cleared answer
+      const existingSub = await this.submissionRepo.findOne({
+        where: { userId, examId, problemId },
+      });
+      if (existingSub) {
+        existingSub.selectedOptionIds = [];
+        existingSub.verdict = 'wrong_answer';
+        existingSub.score = 0;
+        existingSub.submittedAt = submittedAt;
+        await this.submissionRepo.save(existingSub);
+      }
+
+      let score = await this.scoreRepo.findOne({
+        where: { userId, problemId, examId },
+      });
+      if (score) {
+        score.bestScore = 0;
+        score.firstSolvedAt = null;
+        await this.scoreRepo.save(score);
+      }
+
+      void this.scoringService.refreshLeaderboard().catch(() => {});
+      return {
+        saved: true,
+        problemId,
+        selectedOptionIds: [],
+        isAnswered: false,
+        verdict: 'wrong_answer',
+        score: 0,
+      };
+    }
+
+    // Single select validation
+    if (!problem.isMultiSelect && selectedOptionIds.length > 1) {
+      selectedOptionIds = [selectedOptionIds[selectedOptionIds.length - 1]];
+    }
+
+    const correctIds = new Set(
+      options.filter((o) => o.isCorrect).map((o) => o.id),
+    );
+    const isCorrect =
+      selectedOptionIds.length === correctIds.size &&
+      selectedOptionIds.every((id) => correctIds.has(id));
+    const verdict = isCorrect ? 'accepted' : 'wrong_answer';
+    const earnedScore = isCorrect ? problem.maxScore : 0;
+
+    let submission = await this.submissionRepo.findOne({
+      where: { userId, examId, problemId },
+      order: { id: 'DESC' },
+    });
+
+    if (!submission) {
+      submission = this.submissionRepo.create({
+        userId,
+        problemId: problem.id,
+        examId,
+        code: null,
+        language: null,
+        languageId: null,
+        selectedOptionIds,
+        testResults: null,
+        totalTestCases: null,
+        passedTestCases: null,
+        verdict,
+        score: earnedScore,
+        submittedAt,
+      });
+    } else {
+      submission.selectedOptionIds = selectedOptionIds;
+      submission.verdict = verdict;
+      submission.score = earnedScore;
+      submission.submittedAt = submittedAt;
+    }
+    const savedSub = await this.submissionRepo.save(submission);
+
+    let score = await this.scoreRepo.findOne({
+      where: { userId, problemId: problem.id, examId },
+    });
+
+    if (!score) {
+      score = this.scoreRepo.create({
+        userId,
+        problemId: problem.id,
+        examId,
+        totalAttempts: 1,
+        wrongAttempts: isCorrect ? 0 : 1,
+        bestScore: earnedScore,
+        firstSolvedAt: isCorrect ? submittedAt : null,
+        bestSubmissionId: savedSub.id,
+      });
+    } else {
+      score.totalAttempts += 1;
+      score.bestScore = earnedScore;
+      score.firstSolvedAt = isCorrect ? (score.firstSolvedAt || submittedAt) : null;
+      score.bestSubmissionId = savedSub.id;
+    }
+    await this.scoreRepo.save(score);
+
+    void this.scoringService.refreshLeaderboard().catch((err) => {
+      this.logger.warn(
+        `Leaderboard refresh failed after auto MCQ save: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    });
+
+    return {
+      saved: true,
+      problemId,
+      selectedOptionIds,
+      isAnswered: true,
+      verdict,
+      score: earnedScore,
+    };
+  }
+
+  async getMyMcqAnswers(
+    userId: number,
+    examId: number,
+  ): Promise<{ answers: Record<number, string[]> }> {
+    const submissions = await this.submissionRepo
+      .createQueryBuilder('s')
+      .innerJoin('s.problem', 'p')
+      .where('s.userId = :userId', { userId })
+      .andWhere('s.examId = :examId', { examId })
+      .andWhere('p.questionType = :qtype', { qtype: 'mcq' })
+      .select(['s.id', 's.problemId', 's.selectedOptionIds', 's.submittedAt'])
+      .orderBy('s.id', 'ASC')
+      .getMany();
+
+    const answers: Record<number, string[]> = {};
+    for (const sub of submissions) {
+      if (Array.isArray(sub.selectedOptionIds)) {
+        answers[sub.problemId] = sub.selectedOptionIds;
+      }
+    }
+    return { answers };
   }
 
   async run(

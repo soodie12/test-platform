@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -9,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { SubmissionsService } from './submissions.service';
 import { McqSectionSubmitDto } from './dto/mcq-section-submit.dto';
+import { SaveMcqAnswerDto } from './dto/save-mcq-answer.dto';
 import { Auth } from '../common/decorators/auth.decorator';
 import { AuthType } from '../common/enums/auth-type.enum';
 import { ExamWindowGuard } from '../exams/guards/exam-window.guard';
@@ -20,6 +28,47 @@ import { User } from '../entities/user.entity';
 @Controller('exams/:examId/mcq-section')
 export class McqSectionController {
   constructor(private readonly submissionsService: SubmissionsService) {}
+
+  @Post('answer')
+  @Auth(AuthType.JWT, [ExamWindowGuard])
+  @ApiOperation({
+    summary: 'Auto-submit a single MCQ answer immediately upon candidate selection',
+    description:
+      'Instantly evaluates and records the candidate choice for an MCQ question. Allows updating choices anytime during the exam window.',
+  })
+  @ApiParam({ name: 'examId', type: Number })
+  @ApiBody({ type: SaveMcqAnswerDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Answer auto-saved and evaluated',
+  })
+  async saveAnswer(
+    @Param('examId', ParseIntPipe) examId: number,
+    @Body() dto: SaveMcqAnswerDto,
+    @GetUser() user: User,
+  ) {
+    return this.submissionsService.saveMcqAnswer(
+      user.id,
+      examId,
+      dto.problemId,
+      dto.selectedOptionIds,
+    );
+  }
+
+  @Get('my-answers')
+  @Auth()
+  @ApiOperation({ summary: 'Get student saved MCQ answers for an exam' })
+  @ApiParam({ name: 'examId', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Saved MCQ answers mapping problemId to selectedOptionIds',
+  })
+  async getMyAnswers(
+    @Param('examId', ParseIntPipe) examId: number,
+    @GetUser() user: User,
+  ) {
+    return this.submissionsService.getMyMcqAnswers(user.id, examId);
+  }
 
   @Post('submit')
   @Auth(AuthType.JWT, [ExamWindowGuard])

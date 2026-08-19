@@ -1,20 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useProblemsStore } from '../../stores/problems';
 import { useMcqStore } from '../../stores/mcq';
 import { useExamStore } from '../../stores/exam';
-import { useToastStore } from '../../stores/toast';
-import { submitMcqSection } from '../../services/api';
 
 const props = defineProps<{ examId: number }>();
 
 const problemsStore = useProblemsStore();
 const mcqStore = useMcqStore();
 const examStore = useExamStore();
-const toastStore = useToastStore();
 
-onMounted(() => {
-  mcqStore.init(props.examId);
+onMounted(async () => {
+  await mcqStore.init(props.examId);
 });
 
 const mcqProblems = computed(() =>
@@ -23,16 +20,11 @@ const mcqProblems = computed(() =>
     .sort((a, b) => a.displayOrder - b.displayOrder),
 );
 
-const isSubmitted = computed(() => mcqStore.mcqSectionSubmitted);
-const isSubmitting = ref(false);
-const showConfirmModal = ref(false);
-
 function toggleOption(
   problemId: number,
   optId: string,
   isMultiSelect: boolean,
 ) {
-  if (isSubmitted.value) return;
   const current = mcqStore.mcqDrafts[problemId] ?? [];
   let next: string[];
   if (isMultiSelect) {
@@ -42,7 +34,8 @@ function toggleOption(
   } else {
     next = [optId];
   }
-  mcqStore.setDraft(problemId, next);
+  void mcqStore.setDraft(problemId, next);
+  void examStore.fetchMyProgress(props.examId);
 }
 
 function isSelected(problemId: number, optId: string): boolean {
@@ -54,45 +47,13 @@ const answeredCount = computed(
     mcqProblems.value.filter((p) => (mcqStore.mcqDrafts[p.id]?.length ?? 0) > 0)
       .length,
 );
-
-const canSubmit = computed(
-  () =>
-    !isSubmitted.value &&
-    !isSubmitting.value &&
-    answeredCount.value === mcqProblems.value.length,
-);
-
-async function handleSubmit() {
-  if (!canSubmit.value) return;
-  showConfirmModal.value = false;
-  isSubmitting.value = true;
-  try {
-    const answers = mcqProblems.value.map((p) => ({
-      problemId: p.id,
-      selectedOptionIds: mcqStore.mcqDrafts[p.id] ?? [],
-    }));
-    const result = await submitMcqSection({ examId: props.examId, answers });
-    mcqStore.markSubmitted(result.totalScore);
-    await examStore.fetchMyProgress();
-    toastStore.add('success', 'MCQ section submitted!');
-  } catch (e: unknown) {
-    const msg =
-      (e as { response?: { data?: { message?: string } } })?.response?.data
-        ?.message ?? 'Submission failed. Please try again.';
-    toastStore.add('error', msg);
-  } finally {
-    isSubmitting.value = false;
-  }
-}
-
-
 </script>
 
 <template>
   <div class="mcq-section-wrapper">
     <!-- Header -->
     <div class="section-header">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="material-symbols-outlined text-[18px] text-violet-500"
           >quiz</span
         >
@@ -101,9 +62,9 @@ async function handleSubmit() {
         </h2>
         <span class="count-chip">{{ mcqProblems.length }} questions</span>
       </div>
-      <div v-if="isSubmitted" class="submitted-badge">
-        <span class="material-symbols-outlined text-[14px]">check_circle</span>
-        Submitted
+      <div class="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 font-medium">
+        <span class="material-symbols-outlined text-[14px]">cloud_done</span>
+        <span>Auto-save & Submit Active</span>
       </div>
     </div>
 
@@ -136,6 +97,20 @@ async function handleSubmit() {
             >
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
+            <div
+              v-if="mcqStore.savingStates[problem.id] === 'saving'"
+              class="flex items-center gap-1 text-[11px] text-amber-500 font-medium bg-amber-500/10 px-2 py-0.5 rounded-full"
+            >
+              <span class="material-symbols-outlined text-[13px] animate-spin">sync</span>
+              <span>Saving...</span>
+            </div>
+            <div
+              v-else-if="mcqStore.savingStates[problem.id] === 'saved' || (mcqStore.mcqDrafts[problem.id]?.length ?? 0) > 0"
+              class="flex items-center gap-1 text-[11px] text-emerald-500 font-medium bg-emerald-500/10 px-2 py-0.5 rounded-full"
+            >
+              <span class="material-symbols-outlined text-[13px]">check_circle</span>
+              <span>Saved</span>
+            </div>
             <span v-if="problem.maxScore" class="score-chip"
               >{{ problem.maxScore }} pts</span
             >
@@ -158,9 +133,7 @@ async function handleSubmit() {
 
         <!-- Answer status indicator -->
         <div
-          v-if="
-            !isSubmitted && (mcqStore.mcqDrafts[problem.id]?.length ?? 0) === 0
-          "
+          v-if="(mcqStore.mcqDrafts[problem.id]?.length ?? 0) === 0"
           class="unanswered-hint"
         >
           <span class="material-symbols-outlined text-[14px]"
@@ -170,17 +143,13 @@ async function handleSubmit() {
         </div>
 
         <!-- Options -->
-        <div
-          class="options-list"
-          :class="{ 'opacity-70 pointer-events-none': isSubmitted }"
-        >
+        <div class="options-list">
           <label
             v-for="opt in problem.mcqOptions ?? []"
             :key="opt.id"
             class="option-item"
             :class="{
               'option-selected': isSelected(problem.id, opt.id),
-              'option-disabled': isSubmitted,
             }"
           >
             <input
@@ -188,7 +157,6 @@ async function handleSubmit() {
               type="checkbox"
               class="option-input"
               :checked="isSelected(problem.id, opt.id)"
-              :disabled="isSubmitted"
               @change="toggleOption(problem.id, opt.id, true)"
             />
             <input
@@ -197,7 +165,6 @@ async function handleSubmit() {
               class="option-input"
               :name="`mcq-${problem.id}`"
               :checked="isSelected(problem.id, opt.id)"
-              :disabled="isSubmitted"
               @change="toggleOption(problem.id, opt.id, false)"
             />
             <span class="option-content">
@@ -216,94 +183,40 @@ async function handleSubmit() {
 
     <!-- Sticky bottom bar -->
     <div class="bottom-bar">
-      <div v-if="!isSubmitted" class="flex items-center gap-3 flex-wrap">
-        <span class="progress-text">
-          <span
-            :class="
-              answeredCount === mcqProblems.length
-                ? 'text-emerald-500'
-                : 'text-amber-500'
-            "
-            >{{ answeredCount }}</span
-          >
-          / {{ mcqProblems.length }} answered
-        </span>
-        <span
-          v-if="answeredCount < mcqProblems.length"
-          class="text-[11px] text-slate-400"
-        >
-          Answer all questions to submit
-        </span>
-      </div>
-      <div v-else class="submitted-info">
-        <span class="material-symbols-outlined text-[16px] text-emerald-500"
-          >check_circle</span
-        >
-        <span
-          class="text-sm text-emerald-600 dark:text-emerald-400 font-medium"
-        >
-          Section submitted - results will be announced after the exam.
-        </span>
-      </div>
-
-      <button
-        v-if="!isSubmitted"
-        class="submit-btn"
-        :disabled="!canSubmit"
-        @click="showConfirmModal = true"
-      >
-        <span
-          v-if="isSubmitting"
-          class="material-symbols-outlined text-[16px] animate-spin"
-          >progress_activity</span
-        >
-        <span v-else class="material-symbols-outlined text-[16px]">send</span>
-        {{ isSubmitting ? 'Submitting…' : 'Submit All Answers' }}
-      </button>
-    </div>
-
-    <!-- Confirmation modal -->
-    <Teleport to="body">
-      <div
-        v-if="showConfirmModal"
-        class="confirm-overlay"
-        @click.self="showConfirmModal = false"
-      >
-        <div class="confirm-dialog">
-          <div class="flex items-start gap-3">
+      <div class="flex items-center justify-between w-full flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <span class="progress-text">
             <span
-              class="material-symbols-outlined text-[24px] text-amber-500 flex-shrink-0"
-              >warning</span
+              :class="
+                answeredCount === mcqProblems.length
+                  ? 'text-emerald-500 font-bold'
+                  : 'text-amber-500 font-bold'
+              "
+              >{{ answeredCount }}</span
             >
-            <div>
-              <h3
-                class="text-base font-semibold text-slate-900 dark:text-white mb-1"
-              >
-                Submit MCQ Section?
-              </h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400">
-                Once submitted, your answers cannot be changed. Make sure you
-                have answered all questions correctly.
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-3 mt-5">
-            <button
-              class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] rounded-lg transition-colors"
-              @click="showConfirmModal = false"
-            >
-              Go back
-            </button>
-            <button
-              class="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              @click="handleSubmit"
-            >
-              Yes, submit
-            </button>
-          </div>
+            / {{ mcqProblems.length }} answered
+          </span>
+          <span
+            v-if="answeredCount === mcqProblems.length && mcqProblems.length > 0"
+            class="text-xs text-emerald-500 font-medium flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-sm">done_all</span>
+            All answered
+          </span>
+          <span
+            v-else
+            class="text-[11px] text-slate-400"
+          >
+            {{ mcqProblems.length - answeredCount }} remaining
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400" />
+          <span>Every choice is automatically recorded & submitted</span>
         </div>
       </div>
-    </Teleport>
+    </div>
   </div>
 </template>
 

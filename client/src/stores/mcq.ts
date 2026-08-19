@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-
-// Draft answers: problemId → selectedOptionIds (UUID strings)
-// Persisted to sessionStorage keyed by examId so they survive refreshes within a session.
+import { saveMcqAnswer, fetchMyMcqAnswers } from '../services/api';
 
 function storageKey(examId: number) {
   return `mcqDrafts_${examId}`;
@@ -38,20 +36,48 @@ export const useMcqStore = defineStore('mcq', () => {
   const mcqDrafts = ref<Record<number, string[]>>({});
   const mcqSectionSubmitted = ref(false);
   const mcqTotalScore = ref<number | null>(null);
+  const savingStates = ref<Record<number, 'saved' | 'saving' | 'error'>>({});
 
   /** Call once when the exam is known (e.g. after fetchActiveExam). */
-  function init(examId: number) {
+  async function init(examId: number) {
     if (currentExamId.value === examId) return;
     currentExamId.value = examId;
     mcqDrafts.value = loadDrafts(examId);
     mcqSectionSubmitted.value = loadSubmitted(examId);
     mcqTotalScore.value = null;
+
+    // Hydrate from server database
+    try {
+      const { answers } = await fetchMyMcqAnswers(examId);
+      if (answers && Object.keys(answers).length > 0) {
+        mcqDrafts.value = { ...mcqDrafts.value, ...answers };
+        saveDrafts(examId, mcqDrafts.value);
+        for (const pid of Object.keys(answers)) {
+          savingStates.value[Number(pid)] = 'saved';
+        }
+      }
+    } catch {
+      /* ignore offline / network errors */
+    }
   }
 
-  function setDraft(problemId: number, selectedOptionIds: string[]) {
+  async function setDraft(problemId: number, selectedOptionIds: string[]) {
     mcqDrafts.value[problemId] = selectedOptionIds;
     if (currentExamId.value !== null) {
       saveDrafts(currentExamId.value, mcqDrafts.value);
+      const examId = currentExamId.value;
+      savingStates.value[problemId] = 'saving';
+      try {
+        await saveMcqAnswer({
+          examId,
+          problemId,
+          selectedOptionIds,
+        });
+        savingStates.value[problemId] = 'saved';
+      } catch (err) {
+        console.warn(`[mcq] Auto-save failed for problem ${problemId}`, err);
+        savingStates.value[problemId] = 'error';
+      }
     }
   }
 
@@ -68,6 +94,7 @@ export const useMcqStore = defineStore('mcq', () => {
     mcqDrafts,
     mcqSectionSubmitted,
     mcqTotalScore,
+    savingStates,
     init,
     setDraft,
     markSubmitted,
