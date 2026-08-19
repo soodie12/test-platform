@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsBoolean,
   IsInt,
+  IsNumber,
   IsOptional,
   Min,
 } from 'class-validator';
@@ -19,6 +20,11 @@ export class CreateTestCaseDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  score?: number;
 
   @IsInt()
   @Min(0)
@@ -41,6 +47,11 @@ export class UpdateTestCaseDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  score?: number;
 
   @IsInt()
   @Min(0)

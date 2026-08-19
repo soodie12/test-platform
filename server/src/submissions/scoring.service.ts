@@ -39,11 +39,10 @@ export class ScoringService {
   ) {}
 
   /**
-   * ICPC-style scoring:
-   * - Only scores when ALL test cases pass
-   * - effectiveTime = solveTime + (wrongAttempts * 5 min)
-   * - remainingTime = totalDuration - effectiveTime
-   * - score = max(3, 10 * (remainingTime / totalDuration))
+   * Individual / Weighted Test Case Scoring:
+   * - Scores are earned based on passed test cases (earnedScore).
+   * - bestScore tracks the maximum score achieved across all submissions for this problem.
+   * - If all test cases pass, marks firstSolvedAt and increments solved problems count.
    */
   async updateScore(
     userId: number,
@@ -51,6 +50,7 @@ export class ScoringService {
     exam: Exam,
     submissionId: number,
     allPassed: boolean,
+    earnedScore: number,
     maxScore: number = 10,
     externalManager?: EntityManager,
   ): Promise<number> {
@@ -78,33 +78,17 @@ export class ScoringService {
 
       score.totalAttempts += 1;
 
-      if (!allPassed) {
-        // Only increment wrong if not already solved
-        if (!score.firstSolvedAt) {
-          score.wrongAttempts += 1;
-        }
-        await scoreRepo.save(score);
-        return 0;
+      if (!allPassed && !score.firstSolvedAt) {
+        score.wrongAttempts += 1;
       }
 
-      // All passed - calculate ICPC score
-      if (!score.firstSolvedAt) {
+      if (allPassed && !score.firstSolvedAt) {
         score.firstSolvedAt = new Date();
       }
 
-      const solveTimeMin =
-        (score.firstSolvedAt.getTime() - exam.startTime.getTime()) / 60000;
-      const penaltyMin = score.wrongAttempts * 5;
-      const effectiveTimeMin = solveTimeMin + penaltyMin;
-      const remainingTimeMin = exam.durationMinutes - effectiveTimeMin;
-
-      const newScore = Math.max(
-        1,
-        maxScore * (remainingTimeMin / exam.durationMinutes),
-      );
-
-      if (newScore > Number(score.bestScore)) {
-        score.bestScore = newScore;
+      const prevBest = Number(score.bestScore || 0);
+      if (earnedScore >= prevBest) {
+        score.bestScore = earnedScore;
         score.bestSubmissionId = submissionId;
       }
 

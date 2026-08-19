@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { TestCaseRow } from '../../types/admin';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import CsvTestCaseImportModal from '../../components/admin/CsvTestCaseImportModal.vue';
@@ -16,12 +16,17 @@ const emit = defineEmits<{
 const showCsvModal = ref(false);
 let keyCounter = 0;
 
+const totalAssignedPoints = computed(() => {
+  return props.modelValue.reduce((acc, row) => acc + (Number(row.score) || 0), 0);
+});
+
 function newRow(): TestCaseRow {
   return {
     _key: `tc_${Date.now()}_${keyCounter++}`,
     input: '',
     expectedOutput: '',
     isVisible: false,
+    score: 0,
     displayOrder: props.modelValue.length,
   };
 }
@@ -45,7 +50,7 @@ function updateRow(key: string, field: keyof TestCaseRow, value: unknown) {
   emit('update:modelValue', next);
 }
 
-function onImportedTestCases(items?: Array<{ input: string; expectedOutput: string; isVisible: boolean }>) {
+function onImportedTestCases(items?: Array<{ input: string; expectedOutput: string; isVisible: boolean; score?: number }>) {
   showCsvModal.value = false;
   if (!items || items.length === 0) return;
   const currentCount = props.modelValue.length;
@@ -54,6 +59,7 @@ function onImportedTestCases(items?: Array<{ input: string; expectedOutput: stri
     input: item.input,
     expectedOutput: item.expectedOutput,
     isVisible: item.isVisible ?? false,
+    score: item.score ?? 0,
     displayOrder: currentCount + idx,
   }));
   emit('update:modelValue', [...props.modelValue, ...newRows]);
@@ -71,11 +77,18 @@ function onImportedTestCases(items?: Array<{ input: string; expectedOutput: stri
         class="text-[13px] font-bold text-slate-900 dark:text-white uppercase tracking-wider"
         >Test Cases</span
       >
-      <span class="text-xs text-slate-400 flex-1"
+      <span class="text-xs text-slate-400"
         >{{ modelValue.length }} case{{
           modelValue.length !== 1 ? 's' : ''
         }}</span
       >
+      <span
+        v-if="totalAssignedPoints > 0"
+        class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20"
+      >
+        Total: {{ totalAssignedPoints }} pts
+      </span>
+      <div class="flex-1"></div>
       <RegalButton type="button" variant="secondary" @click="showCsvModal = true">
         <span class="material-symbols-outlined text-[16px] mr-1">upload_file</span>
         Import CSV
@@ -116,6 +129,31 @@ function onImportedTestCases(items?: Array<{ input: string; expectedOutput: stri
             />
             Visible to students
           </label>
+
+          <!-- Points Input -->
+          <div
+            class="flex items-center gap-1.5 bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-2.5 py-1"
+            title="Points awarded for passing this test case"
+          >
+            <span class="text-[11px] text-slate-400 font-semibold">Points:</span>
+            <input
+              type="number"
+              class="w-[52px] bg-transparent text-xs text-center text-slate-900 dark:text-white font-mono focus:outline-none"
+              :value="row.score ?? 0"
+              min="0"
+              step="any"
+              placeholder="0"
+              @input="
+                updateRow(
+                  row._key,
+                  'score',
+                  parseFloat(($event.target as HTMLInputElement).value) || 0,
+                )
+              "
+            />
+            <span class="text-[11px] text-slate-400">pts</span>
+          </div>
+
           <input
             type="number"
             class="w-[72px] bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-2 py-1 text-xs text-center text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors"

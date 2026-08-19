@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'imported', items?: Array<{ input: string; expectedOutput: string; isVisible: boolean }>): void;
+  (e: 'imported', items?: Array<{ input: string; expectedOutput: string; isVisible: boolean; score?: number }>): void;
 }>();
 
 const toastStore = useToastStore();
@@ -27,6 +27,8 @@ const selectedProblemId = ref<number | undefined>(props.problemId);
 const selectedInputCols = ref<string[]>([]);
 const selectedOutputCol = ref<string>('');
 const selectedVisibleCol = ref<string>('');
+const selectedScoreCol = ref<string>('');
+const defaultScore = ref<number>(0);
 const defaultVisibility = ref<boolean>(false);
 const inputSeparator = ref<'\n' | ' ' | ',' | '\t'>('\n');
 const trimValues = ref<boolean>(true);
@@ -51,6 +53,8 @@ function resetModal() {
   selectedInputCols.value = [];
   selectedOutputCol.value = '';
   selectedVisibleCol.value = '';
+  selectedScoreCol.value = '';
+  defaultScore.value = 0;
   importing.value = false;
 }
 
@@ -141,6 +145,13 @@ function parseCSV(text: string) {
   if (visibleMatch) {
     selectedVisibleCol.value = visibleMatch;
   }
+
+  const scoreMatch = rawHeaders.find((_, idx) =>
+    ['score', 'points', 'pts', 'marks', 'weight'].some((k) => lowerHeaders[idx].includes(k)),
+  );
+  if (scoreMatch) {
+    selectedScoreCol.value = scoreMatch;
+  }
 }
 
 function onFileSelect(e: Event) {
@@ -206,10 +217,17 @@ const mappedTestCases = computed(() => {
       isVisible = ['true', '1', 'yes', 'visible', 'sample'].includes(val);
     }
 
+    let score = defaultScore.value;
+    if (selectedScoreCol.value && row[selectedScoreCol.value]) {
+      const parsedScore = parseFloat(row[selectedScoreCol.value]);
+      if (!isNaN(parsedScore)) score = parsedScore;
+    }
+
     return {
       input: inputStr,
       expectedOutput: outputStr,
       isVisible,
+      score,
     };
   });
 });
@@ -371,11 +389,32 @@ async function confirmImport() {
                   <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
                 </select>
               </div>
+
+              <!-- Score / Points Column -->
+              <div class="form-group">
+                <label class="form-label">Score / Points Column (Optional)</label>
+                <select v-model="selectedScoreCol" class="form-select">
+                  <option value="">-- None (Use Default Below) --</option>
+                  <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
+                </select>
+              </div>
             </div>
 
             <!-- Additional Format Controls -->
             <div class="format-controls mt-4">
-              <label class="toggle-item">
+              <div class="flex items-center gap-3">
+                <span class="text-xs text-slate-300">Default Score per Test:</span>
+                <input
+                  type="number"
+                  v-model.number="defaultScore"
+                  min="0"
+                  step="any"
+                  class="w-[70px] bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-center text-white font-mono"
+                  placeholder="0"
+                />
+                <span class="text-xs text-slate-400">pts (if column not specified)</span>
+              </div>
+              <label class="toggle-item mt-2">
                 <input type="checkbox" v-model="defaultVisibility" />
                 <span>Default Visibility: <strong>{{ defaultVisibility ? 'Visible (Sample)' : 'Hidden (Grading)' }}</strong></span>
               </label>
@@ -403,6 +442,7 @@ async function confirmImport() {
                     <th style="width: 40px">#</th>
                     <th>Input</th>
                     <th>Expected Output</th>
+                    <th style="width: 70px">Points</th>
                     <th style="width: 90px">Visible</th>
                   </tr>
                 </thead>
@@ -411,6 +451,7 @@ async function confirmImport() {
                     <td class="font-mono text-slate-500 text-[11px]">{{ i + 1 }}</td>
                     <td class="code-cell">{{ tc.input || '(Empty)' }}</td>
                     <td class="code-cell">{{ tc.expectedOutput || '(Empty)' }}</td>
+                    <td class="font-mono text-xs text-primary font-bold">{{ tc.score ?? 0 }} pts</td>
                     <td>
                       <span class="pill" :class="tc.isVisible ? 'pill-visible' : 'pill-hidden'">
                         {{ tc.isVisible ? 'Visible' : 'Hidden' }}

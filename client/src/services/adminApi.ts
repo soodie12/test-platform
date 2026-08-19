@@ -227,7 +227,7 @@ export async function createTestCase(
 
 export async function bulkCreateTestCases(
   problemId: number,
-  testCases: Array<{ input: string; expectedOutput: string; isVisible?: boolean }>,
+  testCases: Array<{ input: string; expectedOutput: string; isVisible?: boolean; score?: number }>,
 ): Promise<TestCaseRow[]> {
   const { data } = await api.post<TestCaseRow[]>(
     `/admin/problems/${problemId}/testcases/bulk`,

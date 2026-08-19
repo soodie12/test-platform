@@ -1,4 +1,13 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateTestCaseItemDto {
@@ -13,6 +22,11 @@ export class CreateTestCaseItemDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  score?: number;
 }
 
 export class BulkCreateTestCasesDto {

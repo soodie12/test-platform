@@ -1,4 +1,4 @@
-import { IsInt, IsString, IsBoolean, IsOptional } from 'class-validator';
+import { IsInt, IsString, IsBoolean, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateTestCaseStandaloneDto {
   @IsInt()
@@ -13,6 +13,11 @@ export class CreateTestCaseStandaloneDto {
   @IsBoolean()
   @IsOptional()
   isVisible?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  score?: number;
 
   @IsInt()
   @IsOptional()

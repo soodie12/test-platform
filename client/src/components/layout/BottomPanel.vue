@@ -32,6 +32,8 @@ const submissionTestResults = computed(() => {
     message?: string | null;
     time?: number | string | null;
     memory?: number | null;
+    score?: number;
+    maxScore?: number;
   }>;
 });
 
@@ -428,8 +430,8 @@ function verdictIcon(verdict: string) {
               </span>
             </div>
             <span
-              v-if="runSubmit.submission.score"
-              class="ml-auto font-mono text-sm font-bold"
+              v-if="runSubmit.submission.score !== undefined && runSubmit.submission.score !== null"
+              class="ml-auto font-mono text-sm font-bold text-primary"
             >
               +{{ runSubmit.submission.score }} pts
             </span>
@@ -458,7 +460,7 @@ function verdictIcon(verdict: string) {
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
                   : 'bg-red-500/10 border-red-500/30 text-red-400'
               "
-              :title="`Case ${r.index + 1}: ${r.status}`"
+              :title="`Case ${r.index + 1}: ${r.status}${r.maxScore ? ` (${r.score ?? 0}/${r.maxScore} pts)` : ''}`"
               @click="!r.passed && toggleError(1000 + r.index)"
             >
               {{ r.index + 1 }}
@@ -494,6 +496,7 @@ function verdictIcon(verdict: string) {
                 <span class="text-[11px] text-red-400 flex-1 truncate">{{
                   r.status
                 }}</span>
+                <span v-if="r.maxScore" class="chip text-slate-400">0/{{ r.maxScore }} pts</span>
                 <span v-if="r.time" class="chip">{{ r.time }}s</span>
                 <span v-if="r.memory" class="chip">{{ r.memory }}KB</span>
                 <button

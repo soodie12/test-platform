@@ -392,6 +392,7 @@ export class AdminService {
             input: tc.input,
             expectedOutput: tc.expectedOutput,
             isVisible: tc.isVisible ?? false,
+            score: tc.score ?? 0,
             displayOrder: tc.displayOrder,
             problemId: savedProblem.id,
           }),
@@ -555,6 +556,7 @@ export class AdminService {
               input: tc.input,
               expectedOutput: tc.expectedOutput,
               isVisible: tc.isVisible ?? false,
+              score: tc.score ?? 0,
               displayOrder: tc.displayOrder,
               problemId: id,
             }),
@@ -777,6 +779,7 @@ export class AdminService {
       input: dto.input,
       expectedOutput: dto.expectedOutput,
       isVisible: dto.isVisible ?? false,
+      score: dto.score ?? 0,
       displayOrder: dto.displayOrder ?? 0,
     });
     return this.testCaseRepo.save(testCase);
@@ -802,6 +805,7 @@ export class AdminService {
         input: item.input,
         expectedOutput: item.expectedOutput,
         isVisible: item.isVisible ?? false,
+        score: item.score ?? 0,
         displayOrder: currentOrder++,
       });
     });
@@ -817,6 +821,7 @@ export class AdminService {
     if (dto.expectedOutput !== undefined)
       testCase.expectedOutput = dto.expectedOutput;
     if (dto.isVisible !== undefined) testCase.isVisible = dto.isVisible;
+    if (dto.score !== undefined) testCase.score = dto.score;
     if (dto.displayOrder !== undefined)
       testCase.displayOrder = dto.displayOrder;
 

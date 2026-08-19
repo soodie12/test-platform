@@ -29,6 +29,7 @@ export interface TestCaseRow {
   input: string;
   expectedOutput: string;
   isVisible: boolean;
+  score?: number;
   displayOrder: number;
   problemId?: number;
   problem?: { id: number; title: string; exam?: { id: number; title: string } };
@@ -100,6 +101,8 @@ export interface AdminSubmission {
     wallTime: string | null;
     memory: number | null;
     exitCode: number | null;
+    score?: number;
+    maxScore?: number;
   }> | null;
   submittedAt: string;
   user?: { id?: number; firstName: string; lastName: string; rollNumber: string };
@@ -257,6 +260,7 @@ export interface CreateProblemPayload {
     input: string;
     expectedOutput: string;
     isVisible?: boolean;
+    score?: number;
     displayOrder: number;
   }>;
   examId?: number;
@@ -287,6 +291,7 @@ export interface CreateTestCasePayload {
   input: string;
   expectedOutput: string;
   isVisible?: boolean;
+  score?: number;
   displayOrder?: number;
 }
 

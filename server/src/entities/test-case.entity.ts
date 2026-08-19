@@ -17,6 +17,9 @@ export class TestCase extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isVisible: boolean;
 
+  @Column({ type: 'float', default: 0 })
+  score: number;
+
   @Column({ type: 'int' })
   displayOrder: number;
 

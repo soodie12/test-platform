@@ -89,6 +89,8 @@ export interface JudgeResult {
   memory: number | null;
   expectedOutput?: string | null;
   input?: string | null;
+  score?: number;
+  maxScore?: number;
 }
 
 export interface RunResult {

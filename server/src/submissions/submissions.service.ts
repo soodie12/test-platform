@@ -116,18 +116,33 @@ export class SubmissionsService {
     // Determine verdict
     let verdict = 'accepted';
     if (!allPassed) {
-      const firstFail = results.find((r) => !r.passed);
-      verdict = firstFail ? firstFail.status : 'wrong_answer';
+      if (passedCount > 0) {
+        verdict = 'partially_accepted';
+      } else {
+        const firstFail = results.find((r) => !r.passed);
+        verdict = firstFail ? firstFail.status : 'wrong_answer';
+      }
     }
 
-    const submission = this.submissionRepo.create({
-      userId,
-      problemId,
-      examId: exam.id,
-      code: sourceCode,
-      language: languageName,
-      languageId,
-      testResults: results.map((r) => ({
+    const hasCustomScores = problem.testCases.some(
+      (tc) => tc.score !== undefined && tc.score !== null && Number(tc.score) > 0,
+    );
+    const defaultPerCaseScore =
+      problem.testCases.length > 0
+        ? Number(((problem.maxScore || 10) / problem.testCases.length).toFixed(2))
+        : 0;
+
+    let totalEarnedScore = 0;
+    const testResultsWithScores = results.map((r) => {
+      const tc = problem.testCases[r.index] ?? problem.testCases[0];
+      const maxCaseScore =
+        hasCustomScores && tc && tc.score !== undefined && tc.score !== null && Number(tc.score) > 0
+          ? Number(Number(tc.score).toFixed(2))
+          : defaultPerCaseScore;
+      const earnedCaseScore = r.passed ? maxCaseScore : 0;
+      totalEarnedScore += earnedCaseScore;
+
+      return {
         index: r.index,
         passed: r.passed,
         status: r.status,
@@ -136,35 +151,43 @@ export class SubmissionsService {
         wallTime: r.wallTime,
         memory: r.memory,
         exitCode: r.exitCode,
-      })),
+        score: Number(earnedCaseScore.toFixed(2)),
+        maxScore: Number(maxCaseScore.toFixed(2)),
+      };
+    });
+
+    const submissionScore = Number(totalEarnedScore.toFixed(2));
+
+    const submission = this.submissionRepo.create({
+      userId,
+      problemId,
+      examId: exam.id,
+      code: sourceCode,
+      language: languageName,
+      languageId,
+      testResults: testResultsWithScores,
       totalTestCases: results.length,
       passedTestCases: passedCount,
       verdict,
-      score: 0,
+      score: submissionScore,
     });
 
-    // Wrap save + scoring + backfill in a single transaction
+    // Wrap save + scoring in a single transaction
     const saved = await this.dataSource.transaction(async (manager) => {
       const savedSubmission = await manager
         .getRepository(Submission)
         .save(submission);
 
-      const earnedScore = await this.scoringService.updateScore(
+      await this.scoringService.updateScore(
         userId,
         problemId,
         exam,
         savedSubmission.id,
         allPassed,
+        submissionScore,
         problem.maxScore,
         manager,
       );
-
-      if (earnedScore > 0) {
-        await manager
-          .getRepository(Submission)
-          .update(savedSubmission.id, { score: earnedScore });
-        savedSubmission.score = earnedScore;
-      }
 
       return savedSubmission;
     });
