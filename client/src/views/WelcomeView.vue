@@ -174,16 +174,12 @@ function scrollTo(id: string) {
 
 const details = [
   {
-    title: 'First 15 Minutes - Read & Prepare',
-    desc: 'Use the opening window to go through the rules, problem statements, and understand the contest flow before coding.',
-  },
-  {
     title: 'Start When Ready',
-    desc: 'Begin solving problems at your own pace within the allotted time in our built-in code editor.',
+    desc: 'Begin solving problems within the allotted duration in our built-in code editor.',
   },
   {
-    title: 'Time-based Scoring',
-    desc: 'Scoring factors in correctness and speed. Faster accepted solutions rank higher on the leaderboard.',
+    title: 'Automated Evaluation',
+    desc: 'Your submissions are instantly evaluated against test cases with marks awarded accordingly.',
   },
   {
     title: 'Top Performers Shortlisted',

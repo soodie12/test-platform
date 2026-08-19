@@ -290,9 +290,9 @@ async function handleExitExam() {
   <ConfirmModal
     v-if="showSubmitConfirm"
     title="Submit Solution?"
-    message="Every wrong submission costs you penalty points. Make sure you've tested your code with Run first."
+    message="Are you sure you want to submit your solution? Make sure you've tested your code with Run first."
     confirm-label="Submit"
-    :danger="true"
+    :danger="false"
     @confirm="confirmAndSubmit"
     @cancel="showSubmitConfirm = false"
   />

@@ -171,7 +171,7 @@ export async function startTour() {
         popover: {
           title: 'Run & Submit',
           description:
-            '<b>Run</b> executes your code against the visible sample test cases - use this to verify your output quickly without affecting your score.<br><br><b>Submit</b> runs against all hidden test cases and records your score. Wrong submissions carry a penalty, so test thoroughly before submitting. Once a problem is accepted, no further submissions are allowed.',
+            '<b>Run</b> executes your code against the visible sample test cases to verify your output quickly.<br><br><b>Submit</b> runs against all hidden test cases and evaluates your solution for the problem.',
           side: 'bottom',
           align: 'end',
         },
