@@ -74,6 +74,14 @@ export class Judge0Service {
     this.baseUrl = SECRETS.JUDGE0_URL;
     this.rapidApiKey = SECRETS.RAPIDAPI_KEY;
     this.rapidApiHost = SECRETS.RAPIDAPI_HOST;
+
+    if (this.rapidApiKey) {
+      this.logger.log(
+        `[Judge0] Cloud RapidAPI Mode ACTIVE -> Host: ${this.rapidApiHost}, Target URL: ${this.baseUrl}`,
+      );
+    } else {
+      this.logger.log(`[Judge0] Direct / Local Mode ACTIVE -> Target URL: ${this.baseUrl}`);
+    }
   }
 
   private get rapidApiHeaders(): Record<string, string> {
@@ -144,6 +152,12 @@ export class Judge0Service {
   ): Promise<JudgeResult[]> {
     let results: Judge0SubmissionResponse[];
 
+    this.logger.log(
+      `[Judge0] Submitting batch of ${submissions.length} testcase(s) -> ${this.baseUrl} ${
+        this.rapidApiKey ? `(RapidAPI Host: ${this.rapidApiHost})` : '(direct)'
+      }`,
+    );
+
     try {
       const response = await axios.post<Judge0SubmissionResponse[]>(
         `${this.baseUrl}/submissions/batch?base64_encoded=true&wait=true`,
@@ -152,6 +166,9 @@ export class Judge0Service {
       );
 
       results = response.data;
+      this.logger.log(
+        `[Judge0] Received response for ${results.length} testcase(s) from ${this.baseUrl} (HTTP ${response.status})`,
+      );
     } catch (err) {
       this.logAxiosError('batch submit', err, {
         languageId,
