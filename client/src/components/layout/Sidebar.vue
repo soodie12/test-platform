@@ -5,6 +5,7 @@ import { useEditorStore } from '../../stores/editor';
 import { useUiStore } from '../../stores/ui';
 import { useExamStore } from '../../stores/exam';
 import { useMcqStore } from '../../stores/mcq';
+import { renderMarkdown } from '../../utils/markdown';
 import type { Problem } from '../../types';
 
 const problemsStore = useProblemsStore();
@@ -310,19 +311,19 @@ function onSelectMcqSection() {
         <div class="detail-body">
           <div v-if="activeProblemDetail.description" class="section">
             <div class="section-label">Description</div>
-            <pre class="text-block">{{ activeProblemDetail.description }}</pre>
+            <div class="markdown-body" v-html="renderMarkdown(activeProblemDetail.description)" />
           </div>
           <div v-if="activeProblemDetail.inputFormat" class="section">
             <div class="section-label">Input Format</div>
-            <pre class="text-block">{{ activeProblemDetail.inputFormat }}</pre>
+            <div class="markdown-body" v-html="renderMarkdown(activeProblemDetail.inputFormat)" />
           </div>
           <div v-if="activeProblemDetail.outputFormat" class="section">
             <div class="section-label">Output Format</div>
-            <pre class="text-block">{{ activeProblemDetail.outputFormat }}</pre>
+            <div class="markdown-body" v-html="renderMarkdown(activeProblemDetail.outputFormat)" />
           </div>
           <div v-if="activeProblemDetail.constraints" class="section">
             <div class="section-label">Constraints</div>
-            <pre class="text-block">{{ activeProblemDetail.constraints }}</pre>
+            <div class="markdown-body" v-html="renderMarkdown(activeProblemDetail.constraints)" />
           </div>
           <div
             v-if="
@@ -531,6 +532,93 @@ function onSelectMcqSection() {
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
+}
+
+/* ── Markdown Content & Tables ── */
+.markdown-body {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+.markdown-body :deep(p) {
+  margin-bottom: 0.6em;
+}
+.markdown-body :deep(p:last-child) {
+  margin-bottom: 0;
+}
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4) {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+.markdown-body :deep(h1) { font-size: 1.2em; }
+.markdown-body :deep(h2) { font-size: 1.1em; }
+.markdown-body :deep(h3) { font-size: 1.05em; }
+.markdown-body :deep(code) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-secondary);
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--brand-teal, #00d9b4);
+  border: 1px solid var(--border);
+}
+.markdown-body :deep(pre) {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+.markdown-body :deep(pre code) {
+  background: transparent;
+  padding: 0;
+  border: none;
+  color: var(--text-primary);
+}
+.markdown-body :deep(ul) {
+  list-style-type: disc;
+  padding-left: 1.25em;
+  margin-bottom: 0.6em;
+}
+.markdown-body :deep(ol) {
+  list-style-type: decimal;
+  padding-left: 1.25em;
+  margin-bottom: 0.6em;
+}
+.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.7em 0;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.markdown-body :deep(th) {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  text-align: left;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+.markdown-body :deep(td) {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+.markdown-body :deep(tr:nth-child(even) td) {
+  background: rgba(125, 125, 125, 0.03);
 }
 
 .sample-grid {

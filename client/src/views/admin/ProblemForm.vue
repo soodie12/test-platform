@@ -8,6 +8,7 @@ import {
   testReferenceSolution,
 } from '../../services/adminApi';
 import TestCaseEditor from './TestCaseEditor.vue';
+import DescriptionEditor from '../../components/admin/DescriptionEditor.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import RegalSelect from '../../components/admin/RegalSelect.vue';
 import type { SelectOption } from '../../components/admin/RegalSelect.vue';
@@ -483,21 +484,14 @@ async function save() {
             }}</span>
           </div>
 
-          <div class="col-span-1 sm:col-span-2 flex flex-col gap-1.5">
-            <label
-              class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
-            >
-              {{ questionType === 'mcq' ? 'Question Stem' : 'Description' }}
-              <span class="text-primary ml-0.5">*</span>
-            </label>
-            <textarea
+          <div class="col-span-1 sm:col-span-2">
+            <DescriptionEditor
               v-model="description"
-              class="field resize-y min-h-[140px]"
-              placeholder="Problem statement..."
+              :label="questionType === 'mcq' ? 'Question Stem' : 'Description'"
+              :placeholder="questionType === 'sql' ? 'Describe the SQL problem statement, database tables, and query requirements...' : 'Problem statement...'"
+              :required="true"
+              :error="errors.description"
             />
-            <span v-if="errors.description" class="text-xs text-red-400">{{
-              errors.description
-            }}</span>
           </div>
 
           <!-- Coding & SQL detail fields -->

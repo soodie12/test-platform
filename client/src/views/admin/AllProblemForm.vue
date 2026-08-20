@@ -15,6 +15,7 @@ import type {
   UpdateProblemPayload,
 } from '../../types/admin';
 import TestCaseEditor from './TestCaseEditor.vue';
+import DescriptionEditor from '../../components/admin/DescriptionEditor.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import RegalSelect from '../../components/admin/RegalSelect.vue';
 import type { SelectOption } from '../../components/admin/RegalSelect.vue';
@@ -487,22 +488,14 @@ function extractError(err: unknown): { message: string; raw: string } {
         }}</span>
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <label
-          class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
-        >
-          {{ questionType === 'mcq' ? 'Question Stem' : 'Description' }}
-          <span class="text-primary ml-0.5">*</span>
-        </label>
-        <textarea
+      <div>
+        <DescriptionEditor
           v-model="form.description"
-          class="field resize-y min-h-[100px]"
-          rows="4"
-          required
-        ></textarea>
-        <span v-if="errors.description" class="text-xs text-red-400">{{
-          errors.description
-        }}</span>
+          :label="questionType === 'mcq' ? 'Question Stem' : 'Description'"
+          :placeholder="questionType === 'sql' ? 'Describe the SQL problem statement, database tables, and query requirements...' : 'Problem statement...'"
+          :required="true"
+          :error="errors.description"
+        />
       </div>
 
       <!-- Coding & SQL detail fields -->
