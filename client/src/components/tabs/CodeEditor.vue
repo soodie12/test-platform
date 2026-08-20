@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, inject, type Ref } from 'vue';
-import { useEditorStore } from '../../stores/editor';
+import { useEditorStore, toLangConfig } from '../../stores/editor';
 import { useExamStore } from '../../stores/exam';
 import { useUiStore } from '../../stores/ui';
 import { useRunSubmitStore } from '../../stores/runSubmit';
@@ -41,17 +41,21 @@ watch(
 );
 
 const availableLanguages = computed(() => {
+  const langs = editorStore.languages;
+
   if (editorStore.activeProblem?.questionType === 'sql') {
-    const sqlLang = editorStore.languages.filter(
+    const sqlLangs = langs.filter(
       (l) => l.id === 82 || l.name.toLowerCase().includes('sql'),
     );
-    if (sqlLang.length > 0) return sqlLang;
+    if (sqlLangs.length > 0) return sqlLangs;
+    return [toLangConfig({ id: 82, name: 'SQL (SQLite 3.27.2)' })];
   }
-  const langs = editorStore.languages;
+
   const allowed = examStore.activeExam?.allowedLanguages as
     | (number | string)[]
     | undefined;
   if (!allowed || allowed.length === 0) return langs;
+
   const filtered = langs.filter((l) =>
     allowed.some((a) => {
       const numA = Number(a);
@@ -82,8 +86,23 @@ const availableLanguages = computed(() => {
       return nameL === strA;
     }),
   );
-  return filtered.length > 0 ? filtered : langs;
+
+  if (filtered.length > 0) return filtered;
+  if (allowed.some((a) => Number(a) === 82 || String(a).toLowerCase().includes('sql'))) {
+    return [toLangConfig({ id: 82, name: 'SQL (SQLite 3.27.2)' })];
+  }
+  return filtered;
 });
+
+watch(
+  availableLanguages,
+  (avail) => {
+    if (avail.length > 0 && !avail.some((l) => l.id === editorStore.language.id)) {
+      editorStore.setLanguage(avail[0]);
+    }
+  },
+  { immediate: true },
+);
 
 function onLanguageChange(e: Event) {
   const id = parseInt((e.target as HTMLSelectElement).value, 10);

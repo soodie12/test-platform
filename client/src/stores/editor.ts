@@ -224,10 +224,11 @@ export const useEditorStore = defineStore('editor', () => {
     activeProblem.value = problem ?? null;
     activeMcqSection.value = false;
     if (problem?.questionType === 'sql') {
-      const sqlLang = languages.value.find((l) => l.id === 82 || l.name.toLowerCase().includes('sql'));
-      if (sqlLang) {
-        language.value = sqlLang;
-      }
+      const sqlLang =
+        languages.value.find(
+          (l) => l.id === 82 || l.name.toLowerCase().includes('sql'),
+        ) ?? toLangConfig({ id: 82, name: 'SQL (SQLite 3.27.2)' });
+      language.value = sqlLang;
     }
     if (id !== null) {
       localStorage.setItem(

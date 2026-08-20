@@ -41,6 +41,8 @@ const SUPPORTED_LANGUAGES: LanguageResponseDto[] = [
   { id: 51, name: 'C# (Mono 6.6.0.161)', version: 'Mono 6.6.0.161' },
   // Swift
   { id: 83, name: 'Swift (5.2.3)', version: '5.2.3' },
+  // SQL
+  { id: 82, name: 'SQL (SQLite 3.27.2)', version: 'SQLite 3.27.2' },
 ];
 
 @Injectable()
