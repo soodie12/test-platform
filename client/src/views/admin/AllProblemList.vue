@@ -7,17 +7,7 @@ import TablePagination from '../../components/shared/TablePagination.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
 import { usePagination } from '../../composables/usePagination';
 import { PAGE_LIMIT } from '../../constants';
-
-interface ProblemRow {
-  id: number;
-  title: string;
-  displayOrder: number;
-  difficulty: string;
-  timeLimitMs: number;
-  memoryLimitKb: number;
-  maxScore: number;
-  testCases?: unknown[];
-}
+import type { ProblemRow } from '../../types/admin';
 
 const router = useRouter();
 
@@ -169,7 +159,23 @@ const difficultyClass: Record<string, string> = {
                 <td
                   class="px-3.5 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-900 dark:text-slate-200 align-middle font-medium"
                 >
-                  {{ p.title }}
+                  <div class="flex items-center gap-2">
+                    <span>{{ p.title }}</span>
+                    <span
+                      v-if="p.questionType === 'sql'"
+                      class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                    >
+                      <span class="material-symbols-outlined text-[12px]">database</span>
+                      SQL
+                    </span>
+                    <span
+                      v-else-if="p.questionType === 'mcq'"
+                      class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-violet-500/10 text-violet-500 border border-violet-500/20"
+                    >
+                      <span class="material-symbols-outlined text-[12px]">quiz</span>
+                      MCQ
+                    </span>
+                  </div>
                 </td>
                 <td
                   class="px-3.5 py-3 border-b border-slate-200 dark:border-white/[0.06] text-slate-900 dark:text-slate-200 align-middle"

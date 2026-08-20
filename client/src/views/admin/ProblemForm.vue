@@ -237,12 +237,12 @@ function validate(): boolean {
   if (!title.value.trim()) errors.value.title = 'Title is required.';
   if (!description.value.trim())
     errors.value.description = 'Description is required.';
-  if (questionType.value === 'coding' && !(displayOrder.value >= 0))
+  if (questionType.value !== 'mcq' && !(displayOrder.value >= 0))
     errors.value.displayOrder = 'Display order must be ≥ 0.';
   if (!(maxScore.value >= 1))
     errors.value.maxScore = 'Max score must be at least 1.';
 
-  if (questionType.value === 'coding') {
+  if (questionType.value === 'coding' || questionType.value === 'sql') {
     if (!(timeLimitMs.value >= 100))
       errors.value.timeLimitMs = 'Time limit must be at least 100ms.';
     if (!(memoryLimitKb.value >= 1024))
@@ -305,7 +305,7 @@ async function save() {
       title: title.value.trim(),
       description: description.value.trim(),
       difficulty: difficulty.value,
-      ...(questionType.value === 'coding'
+      ...(questionType.value !== 'mcq'
         ? { displayOrder: displayOrder.value }
         : {}),
       maxScore: maxScore.value,
@@ -315,7 +315,7 @@ async function save() {
       base.examId = examId;
     }
 
-    if (questionType.value === 'coding') {
+    if (questionType.value === 'coding' || questionType.value === 'sql') {
       Object.assign(base, {
         inputFormat: inputFormat.value.trim() || undefined,
         outputFormat: outputFormat.value.trim() || undefined,
@@ -500,8 +500,8 @@ async function save() {
             }}</span>
           </div>
 
-          <!-- Coding-only detail fields -->
-          <template v-if="questionType === 'coding'">
+          <!-- Coding & SQL detail fields -->
+          <template v-if="questionType === 'coding' || questionType === 'sql'">
             <div class="flex flex-col gap-1.5">
               <label
                 class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
@@ -636,7 +636,7 @@ async function save() {
             />
           </div>
 
-          <div v-if="questionType === 'coding'" class="flex flex-col gap-1.5">
+          <div v-if="questionType === 'coding' || questionType === 'sql'" class="flex flex-col gap-1.5">
             <label
               class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
               >Display Order</label
@@ -668,8 +668,8 @@ async function save() {
             }}</span>
           </div>
 
-          <!-- Coding-only settings -->
-          <template v-if="questionType === 'coding'">
+          <!-- Coding & SQL settings -->
+          <template v-if="questionType === 'coding' || questionType === 'sql'">
             <div class="flex flex-col gap-1.5">
               <label
                 class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
@@ -839,8 +839,8 @@ async function save() {
         >
       </section>
 
-      <!-- Starter Code (coding only) -->
-      <section v-if="questionType === 'coding'" class="mb-6">
+      <!-- Starter Code (coding & sql) -->
+      <section v-if="questionType === 'coding' || questionType === 'sql'" class="mb-6">
         <div class="flex items-center justify-between mb-3.5">
           <div>
             <h3
@@ -967,7 +967,7 @@ async function save() {
 
       <!-- Test Cases (coding & sql) -->
       <section v-if="questionType === 'coding' || questionType === 'sql'" class="mb-6">
-        <TestCaseEditor v-model="testCases" />
+        <TestCaseEditor v-model="testCases" :is-sql="questionType === 'sql'" />
         <span v-if="errors.testCases" class="block mt-2 text-xs text-red-400">{{
           errors.testCases
         }}</span>

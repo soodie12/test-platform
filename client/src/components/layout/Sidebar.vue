@@ -181,9 +181,15 @@ function onSelectMcqSection() {
           >
 
           <!-- Title -->
-          <span class="text-[12px] truncate flex-1 text-left leading-tight">{{
-            p.title
-          }}</span>
+          <span class="text-[12px] truncate flex-1 text-left leading-tight flex items-center gap-1.5">
+            <span class="truncate">{{ p.title }}</span>
+            <span
+              v-if="p.questionType === 'sql'"
+              class="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 flex-shrink-0"
+            >
+              SQL
+            </span>
+          </span>
 
           <!-- Solved indicator dot -->
           <span
@@ -284,7 +290,15 @@ function onSelectMcqSection() {
       <template v-if="activeProblemDetail">
         <!-- Title + difficulty -->
         <div class="detail-header">
-          <h3 class="detail-title">{{ currentProblem?.title }}</h3>
+          <div class="flex items-center gap-2 min-w-0">
+            <h3 class="detail-title truncate">{{ currentProblem?.title }}</h3>
+            <span
+              v-if="currentProblem?.questionType === 'sql'"
+              class="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 flex-shrink-0"
+            >
+              SQL
+            </span>
+          </div>
           <span
             v-if="currentProblem?.difficulty"
             class="difficulty-badge"

@@ -139,7 +139,7 @@ export class ExamsService {
     });
 
     const codingProblemIds = mappings
-      .filter((m) => m.problem.questionType === 'coding')
+      .filter((m) => m.problem.questionType !== 'mcq')
       .map((m) => m.problemId);
     const mcqProblemIds = mappings
       .filter((m) => m.problem.questionType === 'mcq')

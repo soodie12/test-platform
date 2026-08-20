@@ -298,10 +298,10 @@ export class AdminService {
   }): McqOption[] | null {
     const type = dto.questionType ?? 'coding';
 
-    if (type === 'coding') {
+    if (type === 'coding' || type === 'sql') {
       if (dto.mcqOptions?.length) {
         throw new BadRequestException(
-          'mcqOptions must be absent for coding problems',
+          'mcqOptions must be absent for coding and SQL problems',
         );
       }
       return null;

@@ -7,6 +7,7 @@ import CsvTestCaseImportModal from '../../components/admin/CsvTestCaseImportModa
 const props = defineProps<{
   modelValue: TestCaseRow[];
   problemId?: number;
+  isSql?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -177,17 +178,19 @@ function onImportedTestCases(items?: Array<{ input: string; expectedOutput: stri
             ✕
           </RegalButton>
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex flex-col gap-1.5">
             <label
-              class="text-[11px] font-semibold uppercase tracking-wider text-slate-500"
-              >Input</label
+              class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1"
             >
+              <span v-if="isSql" class="material-symbols-outlined text-[13px] text-amber-500">table_chart</span>
+              {{ isSql ? 'Table Setup / Seed SQL (DDL + INSERTs)' : 'Input (stdin)' }}
+            </label>
             <textarea
-              class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors font-mono leading-relaxed resize-y min-h-[80px]"
+              class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors font-mono leading-relaxed resize-y min-h-[100px]"
               :value="row.input"
-              placeholder="stdin input"
-              rows="4"
+              :placeholder="isSql ? '-- CREATE TABLE users (id INT, name TEXT);\n-- INSERT INTO users VALUES (1, \'Alice\');' : 'stdin input'"
+              rows="5"
               spellcheck="false"
               @input="
                 updateRow(
@@ -200,14 +203,16 @@ function onImportedTestCases(items?: Array<{ input: string; expectedOutput: stri
           </div>
           <div class="flex flex-col gap-1.5">
             <label
-              class="text-[11px] font-semibold uppercase tracking-wider text-slate-500"
-              >Expected Output</label
+              class="text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1"
             >
+              <span v-if="isSql" class="material-symbols-outlined text-[13px] text-emerald-500">table_rows</span>
+              {{ isSql ? 'Expected Query Result (stdout)' : 'Expected Output (stdout)' }}
+            </label>
             <textarea
-              class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors font-mono leading-relaxed resize-y min-h-[80px]"
+              class="w-full bg-slate-50 dark:bg-background-dark border border-slate-200 dark:border-white/[0.08] rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 outline-none transition-colors font-mono leading-relaxed resize-y min-h-[100px]"
               :value="row.expectedOutput"
-              placeholder="expected stdout"
-              rows="4"
+              :placeholder="isSql ? '1|Alice\n2|Bob' : 'expected stdout'"
+              rows="5"
               spellcheck="false"
               @input="
                 updateRow(

@@ -103,10 +103,13 @@ export class Judge0Service {
     timeLimitSec = 2,
     memoryLimitKb = 262144,
   ): Promise<JudgeResult[]> {
+    const isSql = languageId === 82;
     const submissions = testCases.map((tc) => ({
-      source_code: this.toBase64(code),
+      source_code: this.toBase64(
+        isSql && tc.input ? `${tc.input.trim()}\n\n${code}` : code,
+      ),
       language_id: languageId,
-      stdin: this.toBase64(tc.input),
+      stdin: this.toBase64(isSql ? '' : tc.input),
       ...(tc.expectedOutput
         ? { expected_output: this.toBase64(tc.expectedOutput) }
         : {}),

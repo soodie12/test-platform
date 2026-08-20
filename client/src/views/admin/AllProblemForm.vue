@@ -277,7 +277,7 @@ function validate(): boolean {
     }
   }
 
-  if (questionType.value === 'coding') {
+  if (questionType.value === 'coding' || questionType.value === 'sql') {
     if (
       referenceSolutionCode.value.trim() &&
       !referenceSolutionLanguageId.value
@@ -309,7 +309,7 @@ async function save() {
       questionType: questionType.value,
     };
 
-    if (questionType.value === 'coding') {
+    if (questionType.value === 'coding' || questionType.value === 'sql') {
       payload.testCases = testCases.value.map((tc, i) => ({
         id: tc.id,
         input: tc.input,
@@ -505,8 +505,8 @@ function extractError(err: unknown): { message: string; raw: string } {
         }}</span>
       </div>
 
-      <!-- Coding-only detail fields -->
-      <template v-if="questionType === 'coding'">
+      <!-- Coding & SQL detail fields -->
+      <template v-if="questionType === 'coding' || questionType === 'sql'">
         <div class="flex flex-col sm:flex-row gap-3.5">
           <div class="flex-1 flex flex-col gap-1.5">
             <label
@@ -623,7 +623,7 @@ function extractError(err: unknown): { message: string; raw: string } {
             placeholder="Select difficulty…"
           />
         </div>
-        <div v-if="questionType === 'coding'" class="flex flex-col gap-1.5">
+        <div v-if="questionType === 'coding' || questionType === 'sql'" class="flex flex-col gap-1.5">
           <label
             class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
             >Display Order</label
@@ -648,8 +648,8 @@ function extractError(err: unknown): { message: string; raw: string } {
           />
         </div>
 
-        <!-- Coding-only settings -->
-        <template v-if="questionType === 'coding'">
+        <!-- Coding & SQL settings -->
+        <template v-if="questionType === 'coding' || questionType === 'sql'">
           <div class="flex flex-col gap-1.5">
             <label
               class="text-[13px] font-semibold text-slate-500 dark:text-slate-400"
@@ -871,7 +871,7 @@ function extractError(err: unknown): { message: string; raw: string } {
 
       <!-- Test Cases (coding & sql) -->
       <template v-if="questionType === 'coding' || questionType === 'sql'">
-        <TestCaseEditor v-model="testCases" />
+        <TestCaseEditor v-model="testCases" :is-sql="questionType === 'sql'" />
       </template>
 
       <div

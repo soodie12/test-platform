@@ -41,6 +41,12 @@ watch(
 );
 
 const availableLanguages = computed(() => {
+  if (editorStore.activeProblem?.questionType === 'sql') {
+    const sqlLang = editorStore.languages.filter(
+      (l) => l.id === 82 || l.name.toLowerCase().includes('sql'),
+    );
+    if (sqlLang.length > 0) return sqlLang;
+  }
   const langs = editorStore.languages;
   const allowed = examStore.activeExam?.allowedLanguages as
     | (number | string)[]
@@ -69,6 +75,9 @@ const availableLanguages = computed(() => {
       }
       if (strA === 'javascript' || strA === 'js') {
         return nameL.includes('javascript') || nameL.includes('node');
+      }
+      if (strA === 'sql') {
+        return nameL.includes('sql');
       }
       return nameL === strA;
     }),
@@ -132,6 +141,7 @@ const fileExt = computed(() => {
     java: 'java',
     c: 'c',
     javascript: 'js',
+    sql: 'sql',
   };
   return (
     map[editorStore.language.monacoLang] ?? editorStore.language.monacoLang
@@ -145,6 +155,7 @@ const langStyle = computed(() => {
     java: { dot: 'bg-orange-400', label: 'text-orange-400' },
     cpp: { dot: 'bg-blue-400', label: 'text-blue-400' },
     c: { dot: 'bg-sky-400', label: 'text-sky-400' },
+    sql: { dot: 'bg-amber-400', label: 'text-amber-400' },
   };
   return (
     map[editorStore.language.monacoLang] ?? {

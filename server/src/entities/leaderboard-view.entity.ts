@@ -10,11 +10,11 @@ import { ViewEntity, ViewColumn } from 'typeorm';
       u."rollNumber",
       u."firstName",
       u."lastName",
-      COUNT(CASE WHEN s."firstSolvedAt" IS NOT NULL AND p."questionType" = 'coding' THEN 1 END)::int AS "solvedCount",
+      COUNT(CASE WHEN s."firstSolvedAt" IS NOT NULL AND p."questionType" != 'mcq' THEN 1 END)::int AS "solvedCount",
       COALESCE(SUM(s."bestScore"), 0)::decimal(10,2) AS "totalScore",
       COALESCE(
         SUM(
-          CASE WHEN s."firstSolvedAt" IS NOT NULL AND p."questionType" = 'coding' THEN
+          CASE WHEN s."firstSolvedAt" IS NOT NULL AND p."questionType" != 'mcq' THEN
             EXTRACT(EPOCH FROM (s."firstSolvedAt" - e."startTime")) / 60.0
             + s."wrongAttempts" * 5
           ELSE 0 END
