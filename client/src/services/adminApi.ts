@@ -585,3 +585,30 @@ export async function listEnrollments(examId: number): Promise<ExamEnrollmentEnt
 export async function resetCandidateExit(examId: number, userId: number): Promise<void> {
   await api.post(`/admin/exams/${examId}/users/${userId}/reset-exit`);
 }
+
+// ─── Reference Solution Testing ────────────────────────────────────────────────
+
+export interface ReferenceSolutionResultItem {
+  index: number;
+  passed: boolean;
+  status: string;
+  statusId: number;
+  stdout: string | null;
+  stderr: string | null;
+  compileOutput: string | null;
+  message: string | null;
+}
+
+export async function testReferenceSolution(payload: {
+  code: string;
+  languageId: number;
+  testCases: Array<{ input: string; expectedOutput?: string }>;
+  timeLimitMs?: number;
+  memoryLimitKb?: number;
+}): Promise<ReferenceSolutionResultItem[]> {
+  const { data } = await api.post<ReferenceSolutionResultItem[]>(
+    '/admin/problems/test-reference-solution',
+    payload,
+  );
+  return data;
+}

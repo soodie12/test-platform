@@ -122,7 +122,7 @@ watch(isExpired, async (expired) => {
     if (!autoSubmitted.value) {
       autoSubmitted.value = true;
       try {
-        if (editorStore.activeProblem?.questionType === 'coding') {
+        if (editorStore.activeProblem?.questionType !== 'mcq') {
           await runSubmit.submit();
         }
       } catch {

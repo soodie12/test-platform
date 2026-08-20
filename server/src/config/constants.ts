@@ -34,6 +34,7 @@ export const LANGUAGE_MAP: Record<string, number[]> = {
   ruby: [72],
   csharp: [51],
   swift: [83],
+  sql: [82],
 };
 
 export const VALID_LANGUAGE_IDS = new Set(Object.values(LANGUAGE_MAP).flat());

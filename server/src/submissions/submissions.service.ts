@@ -777,4 +777,27 @@ export class SubmissionsService {
     await this.submissionRepo.remove(submission);
     return { deleted: true };
   }
+
+  async testReferenceSolution(
+    code: string,
+    languageId: number,
+    testCases: { input: string; expectedOutput?: string }[],
+    timeLimitMs = 2000,
+    memoryLimitKb = 262144,
+  ) {
+    if (!this.judge0Service.isValidLanguageId(languageId)) {
+      throw new BadRequestException(`Unsupported language ID: ${languageId}`);
+    }
+    const timeLimitSec = Math.max(1, Math.ceil(timeLimitMs / 1000));
+    return this.judge0Service.runBatch(
+      code,
+      languageId,
+      testCases.map((tc) => ({
+        input: tc.input || '',
+        expectedOutput: tc.expectedOutput || '',
+      })),
+      timeLimitSec,
+      memoryLimitKb,
+    );
+  }
 }

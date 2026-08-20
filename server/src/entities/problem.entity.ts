@@ -54,7 +54,7 @@ export class Problem extends BaseEntity {
   referenceSolutionLanguageId: number | null;
 
   @Column({ type: 'varchar', length: 10, default: 'coding' })
-  questionType: 'coding' | 'mcq';
+  questionType: 'coding' | 'mcq' | 'sql';
 
   @Column({ default: false })
   isMultiSelect: boolean;

@@ -38,6 +38,8 @@ export const LANGUAGE_NAMES: Record<number, string> = {
   51: 'C# (Mono 6.6.0.161)',
   // Swift
   83: 'Swift (5.2.3)',
+  // SQL
+  82: 'SQL (SQLite 3.27.2)',
 };
 
 export function languageName(id: number): string {

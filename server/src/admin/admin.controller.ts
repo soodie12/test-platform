@@ -26,6 +26,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeUserPasswordDto } from './dto/change-user-password.dto';
 import { CreateAccommodationDto } from './dto/create-accommodation.dto';
+import { TestReferenceSolutionDto } from './dto/test-reference-solution.dto';
 import { CreateScoreDto } from './dto/create-score.dto';
 import { UpdateScoreDto } from './dto/update-score.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
@@ -174,6 +175,12 @@ export class AdminController {
   @Auth(AuthType.JWT, [AdminGuard])
   async getProblem(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.getProblem(id);
+  }
+
+  @Post('problems/test-reference-solution')
+  @Auth(AuthType.JWT, [AdminGuard])
+  async testReferenceSolution(@Body() dto: TestReferenceSolutionDto) {
+    return this.adminService.testReferenceSolution(dto);
   }
 
   @Post('problems')

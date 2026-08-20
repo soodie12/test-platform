@@ -109,7 +109,7 @@ export interface AdminSubmission {
   problem?: {
     id: number;
     title: string;
-    questionType?: 'coding' | 'mcq';
+    questionType?: 'coding' | 'mcq' | 'sql';
     mcqOptions?: Array<{ id: number; text: string; isCorrect: boolean }>;
   };
   exam?: { id?: number; title: string };
@@ -181,7 +181,7 @@ export interface UserExamDetail {
     title: string;
     displayOrder: number;
     maxScore: number;
-    questionType?: 'coding' | 'mcq';
+    questionType?: 'coding' | 'mcq' | 'sql';
     mcqOptions?: Array<{
       id: number;
       text: string;
@@ -232,7 +232,7 @@ export interface ProblemRow {
   timeLimitMs: number;
   memoryLimitKb: number;
   maxScore: number;
-  questionType?: 'coding' | 'mcq';
+  questionType?: 'coding' | 'mcq' | 'sql';
   testCases?: unknown[];
   examId?: number;
 }
@@ -252,7 +252,7 @@ export interface CreateProblemPayload {
   starterCode?: Record<string, string> | null;
   referenceSolutionCode?: string | null;
   referenceSolutionLanguageId?: number | null;
-  questionType?: 'coding' | 'mcq';
+  questionType?: 'coding' | 'mcq' | 'sql';
   isMultiSelect?: boolean;
   questionImageData?: string | null;
   mcqOptions?: Array<{ text: string; imageData?: string; isCorrect: boolean }>;

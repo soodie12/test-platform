@@ -91,9 +91,9 @@ export class CreateProblemDto {
   @IsOptional()
   testCases?: CreateTestCaseDto[];
 
-  @IsIn(['coding', 'mcq'])
+  @IsIn(['coding', 'mcq', 'sql'])
   @IsOptional()
-  questionType?: 'coding' | 'mcq';
+  questionType?: 'coding' | 'mcq' | 'sql';
 
   @IsBoolean()
   @IsOptional()

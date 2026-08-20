@@ -71,6 +71,10 @@ rl.on('close', () => {
 });
 `,
   },
+  sql: {
+    monacoLang: 'sql',
+    boilerplate: `-- Write your SQL query here\nSELECT * FROM users;\n`,
+  },
 };
 
 const DEFAULT_META = {
@@ -219,6 +223,12 @@ export const useEditorStore = defineStore('editor', () => {
     activeProblemId.value = id;
     activeProblem.value = problem ?? null;
     activeMcqSection.value = false;
+    if (problem?.questionType === 'sql') {
+      const sqlLang = languages.value.find((l) => l.id === 82 || l.name.toLowerCase().includes('sql'));
+      if (sqlLang) {
+        language.value = sqlLang;
+      }
+    }
     if (id !== null) {
       localStorage.setItem(
         'activeProblemId',

@@ -5,6 +5,7 @@ import {
   getProblem,
   createProblem,
   updateProblem,
+  testReferenceSolution,
 } from '../../services/adminApi';
 import TestCaseEditor from './TestCaseEditor.vue';
 import RegalButton from '../../components/admin/RegalButton.vue';
@@ -29,7 +30,7 @@ const problemId = computed(() => {
 const isEdit = computed(() => problemId.value !== null);
 
 // ── Form state ────────────────────────────────────────────────────────────────
-const questionType = ref<'coding' | 'mcq'>('coding');
+const questionType = ref<'coding' | 'mcq' | 'sql'>('coding');
 const title = ref('');
 const description = ref('');
 const inputFormat = ref('');
@@ -52,12 +53,54 @@ const starterCodeRows = ref<Array<{ langId: string; code: string }>>([]);
 const referenceSolutionCode = ref('');
 const referenceSolutionLanguageId = ref<string>('');
 const refSolutionLangOptions: SelectOption[] = [
+  { value: '82', label: 'SQL (SQLite 3.27.2)' },
   { value: '71', label: 'Python 3 (71)' },
   { value: '54', label: 'C++ (54)' },
   { value: '50', label: 'C (50)' },
   { value: '62', label: 'Java (62)' },
   { value: '63', label: 'JavaScript (63)' },
 ];
+
+const testingRefSolution = ref(false);
+const refSolutionTestMsg = ref('');
+
+async function runTestReferenceSolution() {
+  if (!referenceSolutionCode.value.trim() || !referenceSolutionLanguageId.value) return;
+  if (!testCases.value.length) {
+    refSolutionTestMsg.value = 'Please add at least one test case before running the reference solution.';
+    return;
+  }
+  testingRefSolution.value = true;
+  refSolutionTestMsg.value = '';
+  try {
+    const results = await testReferenceSolution({
+      code: referenceSolutionCode.value.trim(),
+      languageId: parseInt(referenceSolutionLanguageId.value, 10),
+      testCases: testCases.value.map((tc) => ({
+        input: tc.input,
+        expectedOutput: tc.expectedOutput,
+      })),
+      timeLimitMs: timeLimitMs.value,
+      memoryLimitKb: memoryLimitKb.value,
+    });
+
+    let passedCount = 0;
+    results.forEach((res, i) => {
+      if (testCases.value[i]) {
+        if (res.stdout) {
+          testCases.value[i].expectedOutput = res.stdout;
+        }
+        if (res.passed) passedCount++;
+      }
+    });
+
+    refSolutionTestMsg.value = `Executed ${results.length} test case(s). ${passedCount}/${results.length} passed. Test outputs updated!`;
+  } catch {
+    refSolutionTestMsg.value = 'Failed to execute reference solution. Please check syntax and code execution service.';
+  } finally {
+    testingRefSolution.value = false;
+  }
+}
 
 // MCQ fields
 const isMultiSelect = ref(false);
@@ -394,6 +437,22 @@ async function save() {
           >
             <span class="material-symbols-outlined text-[16px]">quiz</span>
             Multiple Choice
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold transition-all"
+            :class="
+              questionType === 'sql'
+                ? 'bg-amber-500/10 border-amber-500/40 text-amber-500'
+                : 'bg-white dark:bg-surface-dark border-slate-200 dark:border-white/[0.06] text-slate-500 hover:border-slate-300'
+            "
+            @click="
+              questionType = 'sql';
+              referenceSolutionLanguageId = '82';
+            "
+          >
+            <span class="material-symbols-outlined text-[16px]">database</span>
+            SQL Query
           </button>
         </div>
       </section>
@@ -846,16 +905,32 @@ async function save() {
         </div>
       </section>
 
-      <!-- Reference Solution (coding only) -->
-      <section v-if="questionType === 'coding'" class="mb-6">
-        <h3
-          class="text-[13px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3.5"
-        >
-          Reference Solution
-          <span class="text-[11px] normal-case font-normal text-slate-400"
-            >(optional - generates expected output for custom input runs)</span
+      <!-- Reference Solution (coding & sql) -->
+      <section v-if="questionType === 'coding' || questionType === 'sql'" class="mb-6">
+        <div class="flex items-center justify-between mb-3.5">
+          <h3
+            class="text-[13px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
           >
-        </h3>
+            Reference Solution
+            <span class="text-[11px] normal-case font-normal text-slate-400 ml-1"
+              >(correct solution used to verify & auto-populate testcase outputs)</span
+            >
+          </h3>
+          <button
+            type="button"
+            class="px-3.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95 disabled:opacity-50"
+            :disabled="testingRefSolution || !referenceSolutionCode.trim() || !referenceSolutionLanguageId"
+            @click="runTestReferenceSolution"
+          >
+            <span class="material-symbols-outlined text-[16px]" :class="{ 'animate-spin': testingRefSolution }">play_arrow</span>
+            {{ testingRefSolution ? 'Executing Solution...' : 'Run Reference Solution & Populate Outputs' }}
+          </button>
+        </div>
+
+        <div v-if="refSolutionTestMsg" class="mb-3 p-2.5 rounded-lg border text-xs font-semibold" :class="refSolutionTestMsg.includes('Failed') || refSolutionTestMsg.includes('Please') ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'">
+          {{ refSolutionTestMsg }}
+        </div>
+
         <div
           class="bg-white dark:bg-surface-dark border border-slate-200 dark:border-white/[0.06] rounded-xl p-4 sm:p-6 flex flex-col gap-3"
         >
@@ -878,7 +953,7 @@ async function save() {
             <textarea
               v-model="referenceSolutionCode"
               class="field font-mono text-[13px] resize-y min-h-[200px]"
-              placeholder="# Paste your reference solution here"
+              :placeholder="questionType === 'sql' ? '-- Write correct SQL solution here\nSELECT id, name FROM users;' : '# Write correct reference solution here'"
               spellcheck="false"
             />
           </div>
@@ -890,8 +965,8 @@ async function save() {
         >
       </section>
 
-      <!-- Test Cases (coding only) -->
-      <section v-if="questionType === 'coding'" class="mb-6">
+      <!-- Test Cases (coding & sql) -->
+      <section v-if="questionType === 'coding' || questionType === 'sql'" class="mb-6">
         <TestCaseEditor v-model="testCases" />
         <span v-if="errors.testCases" class="block mt-2 text-xs text-red-400">{{
           errors.testCases

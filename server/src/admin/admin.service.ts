@@ -30,6 +30,7 @@ import { PaginationDto, PaginatedResponse } from '../common/dto/pagination.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { CreateAccommodationDto } from './dto/create-accommodation.dto';
+import { TestReferenceSolutionDto } from './dto/test-reference-solution.dto';
 import { CreateProblemDto } from './dto/create-problem.dto';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 import { CreateTestCaseStandaloneDto } from './dto/create-testcase.dto';
@@ -1114,5 +1115,15 @@ export class AdminService {
     enrollment.exitReason = null;
     await this.enrollmentRepo.save(enrollment);
     return { reset: true };
+  }
+
+  async testReferenceSolution(dto: TestReferenceSolutionDto) {
+    return this.submissionsService.testReferenceSolution(
+      dto.code,
+      dto.languageId,
+      dto.testCases,
+      dto.timeLimitMs,
+      dto.memoryLimitKb,
+    );
   }
 }

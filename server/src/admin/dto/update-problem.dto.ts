@@ -17,9 +17,9 @@ import { UpdateTestCaseDto } from './test-case.dto';
 import { CreateMcqOptionDto } from './create-mcq-option.dto';
 
 export class UpdateProblemDto {
-  @IsIn(['coding', 'mcq'])
+  @IsIn(['coding', 'mcq', 'sql'])
   @IsOptional()
-  questionType?: 'coding' | 'mcq';
+  questionType?: 'coding' | 'mcq' | 'sql';
   @IsString()
   @IsNotEmpty()
   @IsOptional()

@@ -43,7 +43,7 @@ export interface Problem {
   starterCode?: Record<string, string> | null;
   referenceSolutionCode?: string | null;
   referenceSolutionLanguageId?: number | null;
-  questionType?: 'coding' | 'mcq';
+  questionType?: 'coding' | 'mcq' | 'sql';
   isMultiSelect?: boolean;
   questionImageData?: string | null;
   mcqOptions?: McqOption[] | null;
