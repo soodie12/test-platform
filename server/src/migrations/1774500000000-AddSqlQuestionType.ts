@@ -4,9 +4,8 @@ export class AddSqlQuestionType1774500000000 implements MigrationInterface {
   name = 'AddSqlQuestionType1774500000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-      ALTER TABLE "problems" ALTER COLUMN "questionType" TYPE character varying(10)
-    `);
+    // questionType is character varying(10), which already supports 'coding', 'mcq', and 'sql'.
+    // No DDL table alteration needed.
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
