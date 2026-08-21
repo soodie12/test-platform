@@ -3,6 +3,7 @@ import { computed, onMounted } from 'vue';
 import { useProblemsStore } from '../../stores/problems';
 import { useMcqStore } from '../../stores/mcq';
 import { useExamStore } from '../../stores/exam';
+import { renderMarkdown } from '../../utils/markdown';
 
 const props = defineProps<{ examId: number }>();
 
@@ -126,10 +127,12 @@ const answeredCount = computed(
           />
         </div>
 
-        <!-- Question description -->
-        <div v-if="problem.description" class="q-description">
-          {{ problem.description }}
-        </div>
+        <!-- Question description with Markdown support -->
+        <div
+          v-if="problem.description"
+          class="q-description markdown-content"
+          v-html="renderMarkdown(problem.description)"
+        />
 
         <!-- Answer status indicator -->
         <div
@@ -174,7 +177,7 @@ const answeredCount = computed(
                 alt="Option image"
                 class="opt-image"
               />
-              <span class="option-text">{{ opt.text }}</span>
+              <span class="option-text markdown-content" v-html="renderMarkdown(opt.text)" />
             </span>
           </label>
         </div>
@@ -295,7 +298,44 @@ const answeredCount = computed(
 }
 
 .q-description {
-  @apply text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap;
+  @apply text-sm text-slate-700 dark:text-slate-300 leading-relaxed;
+}
+
+:deep(.markdown-content p) {
+  @apply mb-2 last:mb-0;
+}
+:deep(.markdown-content h1),
+:deep(.markdown-content h2),
+:deep(.markdown-content h3),
+:deep(.markdown-content h4) {
+  @apply font-bold text-slate-900 dark:text-white mt-3 mb-1.5;
+}
+:deep(.markdown-content code) {
+  @apply font-mono text-[0.9em] bg-slate-100 dark:bg-white/[0.08] px-1.5 py-0.5 rounded text-teal-600 dark:text-teal-400 border border-slate-200 dark:border-white/[0.08];
+}
+:deep(.markdown-content pre) {
+  @apply bg-slate-900 text-slate-100 p-3 rounded-lg overflow-x-auto my-2 text-xs font-mono border border-slate-800;
+}
+:deep(.markdown-content pre code) {
+  @apply bg-transparent p-0 text-slate-100 border-none;
+}
+:deep(.markdown-content table) {
+  @apply w-full border-collapse my-3 text-xs border border-slate-200 dark:border-white/[0.1] rounded-lg overflow-hidden;
+}
+:deep(.markdown-content th) {
+  @apply bg-slate-100 dark:bg-white/[0.05] font-semibold text-left px-3 py-2 border border-slate-200 dark:border-white/[0.1] text-slate-800 dark:text-slate-200;
+}
+:deep(.markdown-content td) {
+  @apply px-3 py-2 border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 font-mono;
+}
+:deep(.markdown-content tr:nth-child(even) td) {
+  @apply bg-slate-50/50 dark:bg-white/[0.02];
+}
+:deep(.markdown-content ul) {
+  @apply list-disc pl-5 my-2;
+}
+:deep(.markdown-content ol) {
+  @apply list-decimal pl-5 my-2;
 }
 
 .unanswered-hint {
@@ -320,7 +360,7 @@ const answeredCount = computed(
 }
 
 .option-input {
-  @apply mt-0.5 flex-shrink-0 accent-primary;
+  @apply mt-1 flex-shrink-0 accent-primary;
 }
 
 .option-content {
@@ -331,6 +371,9 @@ const answeredCount = computed(
 }
 .option-text {
   @apply text-sm text-slate-700 dark:text-slate-300 leading-relaxed;
+}
+.option-text :deep(p) {
+  @apply mb-0 inline;
 }
 
 /* Sticky bottom bar */

@@ -107,6 +107,7 @@ async function runTestReferenceSolution() {
 const isMultiSelect = ref(false);
 const questionImageData = ref<string | null>(null);
 interface McqOptionRow {
+  id?: string;
   text: string;
   imageData: string | null;
   isCorrect: boolean;
@@ -183,11 +184,13 @@ onMounted(async () => {
     if (p.mcqOptions?.length) {
       mcqOptions.value = (
         p.mcqOptions as Array<{
+          id?: string;
           text: string;
           imageData?: string | null;
           isCorrect: boolean;
         }>
       ).map((o) => ({
+        id: o.id,
         text: o.text,
         imageData: o.imageData ?? null,
         isCorrect: o.isCorrect,
@@ -306,9 +309,7 @@ async function save() {
       title: title.value.trim(),
       description: description.value.trim(),
       difficulty: difficulty.value,
-      ...(questionType.value !== 'mcq'
-        ? { displayOrder: displayOrder.value }
-        : {}),
+      displayOrder: displayOrder.value,
       maxScore: maxScore.value,
       questionType: questionType.value,
     };
@@ -349,6 +350,7 @@ async function save() {
         isMultiSelect: isMultiSelect.value,
         questionImageData: questionImageData.value ?? undefined,
         mcqOptions: mcqOptions.value.map((o) => ({
+          id: o.id,
           text: o.text.trim(),
           imageData: o.imageData ?? undefined,
           isCorrect: o.isCorrect,
